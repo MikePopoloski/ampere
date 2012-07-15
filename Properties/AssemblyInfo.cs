@@ -12,7 +12,7 @@ using System.Resources;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Mike Popoloski")]
 [assembly: AssemblyProduct("Ampere")]
-[assembly: AssemblyCopyright("Copyright ©  2012 Mike Popoloski")]
+[assembly: AssemblyCopyright("Copyright (C) 2012 Mike Popoloski")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

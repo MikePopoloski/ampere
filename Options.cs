@@ -15,7 +15,7 @@ namespace Ampere
 {
     class Options : CommandLineOptionsBase
     {
-        [Option("b", "build-script", Required=true,  HelpText = "The path to the build script to run. If not set, the compiler will search for a .cs file that matches the name of the current directory.")]
+        [Option("b", "build-script", HelpText = "The path to the build script to run. If not set, the compiler will search for a .cs file that matches the name of the current directory.")]
         public string BuildScript { get; set; }
 
         [Option("p", "plugins", HelpText = "The path to the directory containing plugin assemblies. If not set, the build script directory will be used.")]

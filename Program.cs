@@ -5,6 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
+using log4net;
+using log4net.Appender;
+using log4net.Config;
+using log4net.Layout;
+using Roslyn.Compilers;
+using Roslyn.Scripting;
+using Roslyn.Scripting.CSharp;
 
 namespace Ampere
 {
@@ -12,6 +19,11 @@ namespace Ampere
     {
         static void Main(string[] args)
         {
+            var appender = new ConsoleAppender();
+            appender.Layout = new PatternLayout("%timestamp [%thread] %level - %message%newline");
+            BasicConfigurator.Configure(appender);
+            var log = LogManager.GetLogger("main");
+
             var options = new Options();
             if (!CommandLineParser.Default.ParseArguments(args, options))
                 return;
@@ -26,12 +38,31 @@ namespace Ampere
                     options.BuildScript = "build.cs";
                 else
                 {
-                    Console.WriteLine("Could not find or open build script.");
+                    log.Error("Could not find or open build script.");
                     return;
                 }
             }
 
-            
+            // load plugins
+
+            // run the script
+            log.InfoFormat("Starting build script ({0})...", Path.GetFullPath(options.BuildScript));
+
+            var scriptEngine = new ScriptEngine();
+            var session = Session.Create();
+
+            try
+            {
+                scriptEngine.ExecuteFile(options.BuildScript, session);
+            }
+            catch (CompilationErrorException e)
+            {
+                foreach (var error in e.Diagnostics)
+                {
+                    var position = error.Location.GetLineSpan(true);
+                    log.ErrorFormat("({0}) {1}", position.StartLinePosition, error.Info.GetMessage());
+                }
+            }
         }
     }
 }
