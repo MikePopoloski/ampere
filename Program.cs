@@ -42,17 +42,19 @@ namespace Ampere
                     return;
                 }
             }
-
-            // load plugins
-
-            // run the script
-            log.InfoFormat("Starting build script ({0})...", Path.GetFullPath(options.BuildScript));
-
+            
+            // create the script engine
+            var context = new BuildContext();
             var scriptEngine = new ScriptEngine();
-            var session = Session.Create();
+            var session = Session.Create(context);
+
+            // load plugins and assemblies
+            session.AddReference(typeof(BuildContext).Assembly);
 
             try
             {
+                // run the script
+                log.InfoFormat("Starting build script ({0})...", Path.GetFullPath(options.BuildScript));
                 scriptEngine.ExecuteFile(options.BuildScript, session);
             }
             catch (CompilationErrorException e)
