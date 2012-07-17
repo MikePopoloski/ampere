@@ -2,10 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Ampere
 {
+    /// <summary>
+    /// The top-level context for the build script.
+    /// </summary>
     public class BuildContext
     {
         public BuildEnvironment Env
@@ -19,12 +23,12 @@ namespace Ampere
             Env = new BuildEnvironment();
         }
 
-        public BuildNode BuildRule(string outputPattern)
+        public BuildNode Build(string pattern, params string[] additional)
         {
-            return new BuildNode(outputPattern);
+            return new OutputNode(pattern, additional);
         }
 
-        public void Build(string name)
+        public Task Begin(string name)
         {
         }
     }

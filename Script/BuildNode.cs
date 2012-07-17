@@ -6,64 +6,16 @@ using System.Threading.Tasks;
 
 namespace Ampere
 {
-    public enum NodeType
+    public abstract class BuildNode
     {
-        StringList,
-        Processor
-    }
-
-    public class BuildNode
-    {
-        public BuildNode Input
-        {
-            get;
-            set;
-        }
-
-        public BuildNode Output
-        {
-            get;
-            set;
-        }
-
-        public string[] Strings
-        {
-            get;
-            set;
-        }
-
-        public object Processor
-        {
-            get;
-            set;
-        }
-
-        public NodeType NodeType
-        {
-            get;
-            set;
-        }
-
-        public BuildNode(object processor)
-        {
-            NodeType = NodeType.Processor;
-            Processor = processor;
-        }
-
-        public BuildNode(params string[] inputs)
-        {
-            NodeType = NodeType.StringList;
-            Strings = inputs;
-        }
-
         public BuildNode Using(object processor)
         {
-            return Input = new BuildNode(processor) { Output = this };
+            return new ProcessorNode(processor);
         }
 
-        public BuildNode From(params string[] inputs)
+        public InputBuildNode From(string input, params string[] inputs)
         {
-            return Input = new BuildNode(inputs) { Output = this };
+            return new InputBuildNode(input, inputs);
         }
     }
 }
