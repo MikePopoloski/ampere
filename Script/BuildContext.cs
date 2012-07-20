@@ -30,12 +30,12 @@ namespace Ampere
             Env = new BuildEnvironment();
         }
 
-        public BuildNode Build(string pattern, params string[] additional)
+        public TransientNode Build(string pattern, params string[] additional)
         {
             return new OutputNode(pattern, 0, additional);
         }
 
-        public BuildNode Build(string pattern, int priority, params string[] additional)
+        public TransientNode Build(string pattern, int priority, params string[] additional)
         {
             return new OutputNode(pattern, priority, additional);
         }
@@ -79,6 +79,8 @@ namespace Ampere
 
         void InternalStart(string name, OutputMatch rule)
         {
+            // walk down the pipeline and build from the bottom-up
+
         }
     }
 }

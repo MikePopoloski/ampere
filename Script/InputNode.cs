@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Ampere
 {
-    public class InputBuildNode
+    class InputNode : BuildNode
     {
-        public InputBuildNode(string input, string[] inputs)
+        public InputNode(string input, string[] inputs)
         {
         }
     }

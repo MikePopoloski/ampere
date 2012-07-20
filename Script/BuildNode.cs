@@ -9,6 +9,18 @@ namespace Ampere
 {
     public abstract class BuildNode
     {
+        public BuildNode InputNode
+        {
+            get;
+            set;
+        }
+
+        public BuildNode OutputNode
+        {
+            get;
+            set;
+        }
+
         protected int LineNumber
         {
             get;
@@ -19,16 +31,6 @@ namespace Ampere
         {
             var stack = new StackTrace(2, true);
             LineNumber = stack.GetFrame(0).GetFileLineNumber();
-        }
-
-        public BuildNode Using(object processor)
-        {
-            return new ProcessorNode(processor);
-        }
-
-        public InputBuildNode From(string input, params string[] inputs)
-        {
-            return new InputBuildNode(input, inputs);
         }
     }
 }

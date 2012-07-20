@@ -19,7 +19,7 @@ namespace Ampere
         }
     }
 
-    class OutputNode : BuildNode
+    class OutputNode : TransientNode
     {
         public string Pattern
         {

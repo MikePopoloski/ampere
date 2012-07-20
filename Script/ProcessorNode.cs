@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Ampere
 {
-    class ProcessorNode : BuildNode
+    class ProcessorNode : TransientNode
     {
         public ProcessorNode(object processor)
         {
