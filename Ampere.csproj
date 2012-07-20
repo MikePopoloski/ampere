@@ -56,11 +56,11 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Script\BuildEnvironment.cs" />
-    <Compile Include="Script\BuildNode.cs" />
-    <Compile Include="Script\InputNode.cs" />
-    <Compile Include="Script\OutputNode.cs" />
-    <Compile Include="Script\ProcessorNode.cs" />
-    <Compile Include="Script\TransientNode.cs" />
+    <Compile Include="Nodes\BuildNode.cs" />
+    <Compile Include="Nodes\InputNode.cs" />
+    <Compile Include="Nodes\OutputNode.cs" />
+    <Compile Include="Nodes\ProcessorNode.cs" />
+    <Compile Include="Nodes\TransientNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
