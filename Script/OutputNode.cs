@@ -7,18 +7,6 @@ using System.Threading.Tasks;
 
 namespace Ampere
 {
-    class OutputMatch
-    {
-        public OutputNode Node;
-        public Match Match;
-
-        public OutputMatch(OutputNode node, Match match)
-        {
-            Node = node;
-            Match = match;
-        }
-    }
-
     class OutputNode : TransientNode
     {
         public string Pattern
@@ -39,6 +27,12 @@ namespace Ampere
             set;
         }
 
+        public Match MatchResults
+        {
+            get;
+            private set;
+        }
+
         public OutputNode(string pattern, int priority, string[] byproducts)
         {
             Pattern = pattern;
@@ -46,18 +40,20 @@ namespace Ampere
             Byproducts = byproducts;
         }
 
-        public OutputMatch Match(string name)
+        public OutputNode Match(string name)
         {
             // allow non-regex wildcard strings to be used
             var current = Pattern;
             if (!Pattern.StartsWith("/") || !Pattern.EndsWith("/"))
                 current = "^" + Regex.Escape(Pattern).Replace(@"\*", ".*").Replace(@"\?", ".") + "$";
 
-            var match = Regex.Match(name, current);
-            if (!match.Success)
-                return null;
+            MatchResults = Regex.Match(name, current);
+            return this;
+        }
 
-            return new OutputMatch(this, match);
+        public override object Evaluate(BuildContext context)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -21,6 +21,11 @@ namespace Ampere
             set;
         }
 
+        public virtual bool RequiresInputOnDisk
+        {
+            get { return false; }
+        }
+
         protected int LineNumber
         {
             get;
@@ -29,8 +34,28 @@ namespace Ampere
 
         protected BuildNode()
         {
-            var stack = new StackTrace(2, true);
+            var stack = new StackTrace(3, true);
             LineNumber = stack.GetFrame(0).GetFileLineNumber();
         }
+
+        public BuildNode GetBottomNode()
+        {
+            var node = this;
+            while (node.InputNode != null)
+                node = node.InputNode;
+
+            return node;
+        }
+
+        public BuildNode GetTopNode()
+        {
+            var node = this;
+            while (node.OutputNode != null)
+                node = node.OutputNode;
+
+            return node;
+        }
+
+        public abstract object Evaluate(BuildContext context);
     }
 }

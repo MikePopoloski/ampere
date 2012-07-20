@@ -45,8 +45,8 @@ namespace Ampere
             // find best applicable rule
             var best = rules
                 .Select(r => r.Match(name))
-                .Where(m => m != null)
-                .GroupBy(m => m.Node.Priority)
+                .Where(m => m.MatchResults.Success)
+                .GroupBy(m => m.Priority)
                 .OrderBy(g => g.Key)
                 .FirstOrDefault();
 
@@ -68,19 +68,23 @@ namespace Ampere
             })).Value;
 
             // also register the task for any byproducts
-            foreach(var byproduct in chosen.Node.Byproducts)
+            foreach(var byproduct in chosen.Byproducts)
             {
-                var byproductName = chosen.Match.Result(byproduct);
+                var byproductName = chosen.MatchResults.Result(byproduct);
                 runningBuilds.TryAdd(byproductName, new Lazy<Task>(() => task));
             }
 
             return task;
         }
 
-        void InternalStart(string name, OutputMatch rule)
+        void InternalStart(string name, OutputNode rule)
         {
             // walk down the pipeline and build from the bottom-up
+            var currentStage = rule.GetBottomNode();
+            while (currentStage != null)
+            {
 
+            }
         }
     }
 }

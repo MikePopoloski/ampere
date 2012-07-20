@@ -13,5 +13,10 @@ namespace Ampere
     {
         public string InputPath { get; set; }
         public string OutputPath { get; set; }
+
+        public string ResolveInput(string name)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
