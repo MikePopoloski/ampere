@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
@@ -29,20 +30,24 @@ namespace Ampere
                 return;
 
             // if we weren't given a build script, try to find one in the current directory
-            if (string.IsNullOrEmpty(options.BuildScript) || !File.Exists(options.BuildScript))
+            string scriptPath = options.BuildScript;
+            if (string.IsNullOrEmpty(scriptPath) || !File.Exists(scriptPath))
             {
                 var file = Path.GetDirectoryName(Directory.GetCurrentDirectory()) + ".cs";
                 if (File.Exists(file))
-                    options.BuildScript = file;
+                    scriptPath = file;
                 else if (File.Exists("build.cs"))
-                    options.BuildScript = "build.cs";
+                    scriptPath = "build.cs";
                 else
                 {
                     log.Error("Could not find or open build script.");
                     return;
                 }
             }
-            
+
+            scriptPath = Path.GetFullPath(scriptPath);
+            var pluginPath = options.PluginDirectory ?? Path.GetDirectoryName(scriptPath);
+
             // create the script engine
             var context = new BuildContext();
             var scriptEngine = new ScriptEngine();
@@ -50,6 +55,21 @@ namespace Ampere
 
             // load plugins and assemblies
             session.AddReference(typeof(BuildContext).Assembly);
+            foreach (var file in Directory.EnumerateFiles(pluginPath, "*.dll"))
+            {
+                // check whether this is a managed assembly
+                try
+                {
+                    var assembly = Assembly.LoadFrom(file);
+                    session.AddReference(assembly);
+                }
+                catch (BadImageFormatException)
+                {
+                }
+                catch (FileLoadException)
+                {
+                }
+            }
 
             try
             {

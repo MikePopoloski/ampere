@@ -25,10 +25,11 @@ namespace Ampere
             var paths = new List<string>();
             foreach (var input in inputs)
             {
-                var path = context.Env.ResolveInput(root.MatchResults.Result(input));
+                var fullName = root.MatchResults.Result(input);
+                var path = context.Env.ResolveInput(fullName);
                 if (string.IsNullOrEmpty(path))
                 {
-                    BuildContext.Log.ErrorFormat("Could not resolve input '{0}' (line {1}).", input, LineNumber);
+                    BuildContext.Log.ErrorFormat("Could not resolve input '{0}' (line {1}).", fullName, LineNumber);
                     return null;
                 }
 
