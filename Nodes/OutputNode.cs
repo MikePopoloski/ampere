@@ -63,7 +63,7 @@ namespace Ampere
             var inputArray = inputs.ToArray();
             if (inputArray.Length != outputs.Count)
             {
-                BuildContext.Log.ErrorFormat("Number of inputs does not match number of outputs for '{0}' (line {1}).", MatchResults.Value, LineNumber);
+                context.Log.ErrorFormat("Number of inputs does not match number of outputs for '{0}' (line {1}).", MatchResults.Value, LineNumber);
                 return null;
             }
 

@@ -29,7 +29,7 @@ namespace Ampere
                 var path = context.Env.ResolveInput(fullName);
                 if (string.IsNullOrEmpty(path))
                 {
-                    BuildContext.Log.ErrorFormat("Could not resolve input '{0}' (line {1}).", fullName, LineNumber);
+                    context.Log.ErrorFormat("Could not resolve input '{0}' (line {1}).", fullName, LineNumber);
                     return null;
                 }
 

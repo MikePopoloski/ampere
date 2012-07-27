@@ -15,8 +15,6 @@ namespace Ampere
     /// </summary>
     public class BuildContext
     {
-        public static readonly ILog Log = LogManager.GetLogger("Build");
-
         List<OutputNode> rules = new List<OutputNode>();
         ConcurrentDictionary<string, Lazy<Task>> runningBuilds = new ConcurrentDictionary<string, Lazy<Task>>();
 
@@ -26,9 +24,16 @@ namespace Ampere
             private set;
         }
 
+        public ILog Log
+        {
+            get;
+            private set;
+        }
+
         public BuildContext()
         {
             Env = new BuildEnvironment();
+            Log = LogManager.GetLogger("Build");
         }
 
         public TransientNode Build(string pattern, params string[] additional)
