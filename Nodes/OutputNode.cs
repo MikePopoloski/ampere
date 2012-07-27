@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -51,7 +52,7 @@ namespace Ampere
             return this;
         }
 
-        public override object Evaluate(BuildContext context)
+        public override IEnumerable<Stream> Evaluate(BuildContext context, IEnumerable<Stream> input)
         {
             throw new NotImplementedException();
         }

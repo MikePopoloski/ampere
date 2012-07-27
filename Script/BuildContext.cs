@@ -81,8 +81,10 @@ namespace Ampere
         {
             // walk down the pipeline and build from the bottom-up
             var currentStage = rule.GetBottomNode();
+            object[] currentArgs = null;
             while (currentStage != null)
             {
+                // run the current stage, saving the results and passing them on to the next stage in the pipeline
 
             }
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,11 +20,6 @@ namespace Ampere
         {
             get;
             set;
-        }
-
-        public virtual bool RequiresInputOnDisk
-        {
-            get { return false; }
         }
 
         protected int LineNumber
@@ -56,6 +52,6 @@ namespace Ampere
             return node;
         }
 
-        public abstract object Evaluate(BuildContext context);
+        public abstract IEnumerable<Stream> Evaluate(BuildContext context, IEnumerable<Stream> input);
     }
 }

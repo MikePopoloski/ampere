@@ -17,7 +17,7 @@ namespace Ampere
             inputs.AddRange(additional);
         }
 
-        public override object Evaluate(BuildContext context)
+        public override IEnumerable<Stream> Evaluate(BuildContext context, IEnumerable<Stream> unused)
         {
             var root = (OutputNode)GetTopNode();
 
@@ -36,13 +36,8 @@ namespace Ampere
                 paths.Add(path);
             }
 
-            // as an optimization, determine whether the next node in the pipeline requires the data to be on disk
-            // if that's the case, don't bother reading in a filestream
-            if (OutputNode.RequiresInputOnDisk)
-                return paths.ToArray();
-
-            // otherwise, read in filestreams
-            return paths.Select(p => File.OpenRead(p)).ToArray();
+            // otherwise, open up the filestreams
+            return paths.Select(p => File.OpenRead(p));
         }
     }
 }
