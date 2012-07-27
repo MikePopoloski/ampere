@@ -71,9 +71,14 @@ namespace Ampere
             for (int i = 0; i < inputArray.Length; i++)
             {
                 var outputPath = context.Env.ResolveOutput(outputs[i]);
-                var stream = inputArray[i];
+                if (string.IsNullOrEmpty(outputPath))
+                {
+                    context.Log.ErrorFormat("Could not resolve output '{0}' (line {1}).", outputs[i], LineNumber);
+                    return null;
+                }
 
                  // if we have a filestream, we can do a straight file copy because we know it hasn't been changed
+                var stream = inputArray[i];
                 var file = stream as FileStream;
                 if (file != null)
                     File.Copy(file.Name, outputPath, true);

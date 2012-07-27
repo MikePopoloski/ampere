@@ -32,7 +32,7 @@ namespace Ampere
 
         public BuildContext()
         {
-            Env = new BuildEnvironment();
+            Env = new BuildEnvironment(this);
             Log = LogManager.GetLogger("Build");
         }
 
