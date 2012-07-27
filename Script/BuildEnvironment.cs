@@ -18,5 +18,10 @@ namespace Ampere
         {
             throw new NotImplementedException();
         }
+
+        public string ResolveOutput(string name)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

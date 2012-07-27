@@ -22,7 +22,8 @@ namespace Ampere
 
         public override IEnumerable<Stream> Evaluate(BuildContext context, IEnumerable<Stream> input)
         {
-            throw new NotImplementedException();
+            dynamic p = Processor;
+            return p.Run(context, input);
         }
     }
 }

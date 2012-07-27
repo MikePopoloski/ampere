@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -81,12 +82,18 @@ namespace Ampere
         {
             // walk down the pipeline and build from the bottom-up
             var currentStage = rule.GetBottomNode();
-            object[] currentArgs = null;
+            IEnumerable<Stream> state = null;
             while (currentStage != null)
             {
                 // run the current stage, saving the results and passing them on to the next stage in the pipeline
+                state = currentStage.Evaluate(this, state);
+                if (state == null)
+                    return;
 
+                currentStage = currentStage.OutputNode;
             }
+
+            Log.InfoFormat("Build for '{0}' successful.", name);
         }
     }
 }
