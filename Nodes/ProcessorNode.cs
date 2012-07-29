@@ -20,10 +20,10 @@ namespace Ampere
             Processor = processor;
         }
 
-        public override IEnumerable<Stream> Evaluate(BuildContext context, IEnumerable<Stream> input)
+        public override IEnumerable<Stream> Evaluate(BuildInstance instance, IEnumerable<Stream> inputs)
         {
             dynamic p = Processor;
-            return p.Run(context, input);
+            return p.Run(instance, inputs);
         }
     }
 }

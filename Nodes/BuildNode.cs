@@ -22,7 +22,7 @@ namespace Ampere
             set;
         }
 
-        protected int LineNumber
+        public int LineNumber
         {
             get;
             private set;
@@ -43,15 +43,6 @@ namespace Ampere
             return node;
         }
 
-        public BuildNode GetTopNode()
-        {
-            var node = this;
-            while (node.OutputNode != null)
-                node = node.OutputNode;
-
-            return node;
-        }
-
-        public abstract IEnumerable<Stream> Evaluate(BuildContext context, IEnumerable<Stream> input);
+        public abstract IEnumerable<Stream> Evaluate(BuildInstance instance, IEnumerable<Stream> inputs);
     }
 }

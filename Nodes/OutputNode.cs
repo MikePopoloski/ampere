@@ -28,12 +28,6 @@ namespace Ampere
             set;
         }
 
-        public Match MatchResults
-        {
-            get;
-            private set;
-        }
-
         public OutputNode(string pattern, int priority, string[] byproducts)
         {
             Pattern = pattern;
@@ -41,39 +35,38 @@ namespace Ampere
             Byproducts = byproducts;
         }
 
-        public OutputNode Match(string name)
+        public Match Match(string name)
         {
             // allow non-regex wildcard strings to be used
             var current = Pattern;
             if (!Pattern.StartsWith("/") || !Pattern.EndsWith("/"))
                 current = "^" + Regex.Escape(Pattern).Replace(@"\*", ".*").Replace(@"\?", ".") + "$";
 
-            MatchResults = Regex.Match(name, current);
-            return this;
+            return Regex.Match(name, current);
         }
 
-        public override IEnumerable<Stream> Evaluate(BuildContext context, IEnumerable<Stream> inputs)
+        public override IEnumerable<Stream> Evaluate(BuildInstance instance, IEnumerable<Stream> inputs)
         {
             // figure out the final names of each output
             var outputs = new List<string>();
-            outputs.Add(MatchResults.Value);
-            outputs.AddRange(Byproducts.Select(b => MatchResults.Result(b)));
+            outputs.Add(instance.Match.Value);
+            outputs.AddRange(Byproducts.Select(b => instance.Match.Result(b)));
             
             // make sure we have enough inputs to satisfy each output
             var inputArray = inputs.ToArray();
             if (inputArray.Length != outputs.Count)
             {
-                context.Log.ErrorFormat("Number of inputs does not match number of outputs for '{0}' (line {1}).", MatchResults.Value, LineNumber);
+                instance.Log(LogLevel.Error, "Number of inputs does not match number of outputs for '{0}' (line {1}).", instance.Match.Value, LineNumber);
                 return null;
             }
 
             // match each input to an output name
             for (int i = 0; i < inputArray.Length; i++)
             {
-                var outputPath = context.Env.ResolveOutput(outputs[i]);
+                var outputPath = instance.Env.ResolveOutput(outputs[i]);
                 if (string.IsNullOrEmpty(outputPath))
                 {
-                    context.Log.ErrorFormat("Could not resolve output '{0}' (line {1}).", outputs[i], LineNumber);
+                    instance.Log(LogLevel.Error, "Could not resolve output '{0}' (line {1}).", outputs[i], LineNumber);
                     return null;
                 }
 

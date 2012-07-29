@@ -62,6 +62,8 @@ namespace Ampere
                 {
                     var assembly = Assembly.LoadFrom(file);
                     session.AddReference(assembly);
+
+                    log.InfoFormat("Loaded plugin: '{0}'", assembly);
                 }
                 catch (BadImageFormatException)
                 {

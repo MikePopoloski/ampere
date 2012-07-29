@@ -61,6 +61,7 @@
     <Compile Include="Nodes\OutputNode.cs" />
     <Compile Include="Nodes\ProcessorNode.cs" />
     <Compile Include="Nodes\TransientNode.cs" />
+    <Compile Include="Script\BuildInstance.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

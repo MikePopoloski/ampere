@@ -17,19 +17,17 @@ namespace Ampere
             inputs.AddRange(additional);
         }
 
-        public override IEnumerable<Stream> Evaluate(BuildContext context, IEnumerable<Stream> unused)
+        public override IEnumerable<Stream> Evaluate(BuildInstance instance, IEnumerable<Stream> unused)
         {
-            var root = (OutputNode)GetTopNode();
-
             // resolve input names into full paths; if any fail, an error occurs
             var paths = new List<string>();
             foreach (var input in inputs)
             {
-                var fullName = root.MatchResults.Result(input);
-                var path = context.Env.ResolveInput(fullName);
+                var fullName = instance.Match.Result(input);
+                var path = instance.Env.ResolveInput(fullName);
                 if (string.IsNullOrEmpty(path))
                 {
-                    context.Log.ErrorFormat("Could not resolve input '{0}' (line {1}).", fullName, LineNumber);
+                    instance.Log(LogLevel.Error, "Could not resolve input '{0}' (line {1}).", fullName, LineNumber);
                     return null;
                 }
 

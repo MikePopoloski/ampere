@@ -50,9 +50,9 @@ namespace Ampere
         {
             // find best applicable rule
             var best = rules
-                .Select(r => r.Match(name))
-                .Where(m => m.MatchResults.Success)
-                .GroupBy(m => m.Priority)
+                .Select(r => new { Node = r, Match = r.Match(name) })
+                .Where(m => m.Match.Success)
+                .GroupBy(m => m.Node.Priority)
                 .OrderBy(g => g.Key)
                 .FirstOrDefault();
 
@@ -62,36 +62,38 @@ namespace Ampere
                 return null;
             }
             else if (best.Count() != 1)
-                Log.WarnFormat("More than one rule with the same priority matches asset '{0}' (rules on lines: {1})", name, string.Join(", ", best));
+                Log.WarnFormat("More than one rule with the same priority matches asset '{0}' (rules on lines: {1})", name, string.Join(", ", best.Select(b => b.Node.LineNumber)));
 
             // we've found the rule we will use. queue up the task to build the asset, or return the current one if it's already being built
             var chosen = best.First();
             var task = runningBuilds.GetOrAdd(name, new Lazy<Task>(() =>
             {
-                var job = Task.Run(() => InternalStart(name, chosen));
+                var job = Task.Run(() => InternalStart(name, chosen.Node, chosen.Match));
                 job.ContinueWith(t => runningBuilds.Remove(name));
                 return job;
             })).Value;
 
             // also register the task for any byproducts
-            foreach(var byproduct in chosen.Byproducts)
+            foreach(var byproduct in chosen.Node.Byproducts)
             {
-                var byproductName = chosen.MatchResults.Result(byproduct);
+                var byproductName = chosen.Match.Result(byproduct);
                 runningBuilds.TryAdd(byproductName, new Lazy<Task>(() => task));
             }
 
             return task;
         }
 
-        void InternalStart(string name, OutputNode rule)
+        void InternalStart(string name, OutputNode rule, Match match)
         {
             // walk down the pipeline and build from the bottom-up
             var currentStage = rule.GetBottomNode();
+            var instance = new BuildInstance(this, match);
             IEnumerable<Stream> state = null;
+
             while (currentStage != null)
             {
                 // run the current stage, saving the results and passing them on to the next stage in the pipeline
-                state = currentStage.Evaluate(this, state);
+                state = currentStage.Evaluate(instance, state);
                 if (state == null)
                     return;
 
