@@ -22,5 +22,16 @@ namespace Ampere
             TValue value;
             return map.TryRemove(key, out value);
         }
+
+        /// <summary>
+        /// Creates a set from the given source sequence.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the sequence.</typeparam>
+        /// <param name="source">The source sequence.</param>
+        /// <returns>The set containing the elements of the sequence.</returns>
+        public static HashSet<T> ToSet<T>(this IEnumerable<T> source)
+        {
+            return new HashSet<T>(source);
+        }
     }
 }

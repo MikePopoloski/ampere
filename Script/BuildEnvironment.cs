@@ -7,6 +7,15 @@ using System.Threading.Tasks;
 
 namespace Ampere
 {
+    [Flags]
+    public enum ChangeDetection
+    {
+        None = 0,
+        Length = 0x2,
+        Timestamp = 0x4,
+        Hash = 0x8
+    }
+
     /// <summary>
     /// Allows the build script to interact with the host environment.
     /// </summary>
@@ -14,9 +23,11 @@ namespace Ampere
     {
         BuildContext context;
 
+        public ChangeDetection OutputChangeDetection { get; set; }
+        public ChangeDetection InputChangeDetection { get; set; }
+
         public string InputPath { get; set; }
         public string OutputPath { get; set; }
-        public string TempPath { get; set; }
 
         public Func<string, string> InputResolver { get; set; }
         public Func<string, string> OutputResolver { get; set; }
@@ -25,7 +36,8 @@ namespace Ampere
         {
             this.context = context;
 
-            TempPath = Path.GetTempPath();
+            OutputChangeDetection = ChangeDetection.Length;
+            InputChangeDetection = ChangeDetection.Length | ChangeDetection.Timestamp | ChangeDetection.Hash;
         }
 
         public string ResolveInput(string name)
@@ -68,17 +80,6 @@ namespace Ampere
                 return null;
 
             return Path.Combine(OutputPath, output);
-        }
-
-        public string GetTemporaryFile()
-        {
-            if (!Directory.Exists(TempPath))
-            {
-                context.Log.ErrorFormat("Current temp path '{0}' does not exist.", TempPath);
-                return null;
-            }
-
-            return Path.Combine(TempPath, Guid.NewGuid().ToString() + ".tmp");
         }
     }
 }
