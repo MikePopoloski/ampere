@@ -31,10 +31,37 @@ namespace Ampere
             private set;
         }
 
-        public BuildInstance(BuildContext context, Match match)
+        public BuildNode Pipeline
+        {
+            get;
+            private set;
+        }
+
+        public string[] Byproducts
+        {
+            get;
+            private set;
+        }
+
+        public string[] Inputs
+        {
+            get;
+            private set;
+        }
+
+        public string Output
+        {
+            get { return Match.Value; }
+        }
+
+        internal BuildInstance(BuildContext context, Match match, OutputNode pipeline, string[] inputs)
         {
             Env = context.Env;
             Match = match;
+            Pipeline = pipeline;
+            Byproducts = pipeline.Byproducts;
+            Inputs = inputs;
+
             this.context = context;
         }
 

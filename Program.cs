@@ -18,6 +18,8 @@ namespace Ampere
 {
     class Program
     {
+        static readonly string DataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ampere");
+
         static void Main(string[] args)
         {
             var appender = new ConsoleAppender();
@@ -49,7 +51,7 @@ namespace Ampere
             var pluginPath = options.PluginDirectory ?? Path.GetDirectoryName(scriptPath);
 
             // create the script engine
-            var context = new BuildContext();
+            var context = new BuildContext(Path.Combine(DataDirectory, "history.dat"));
             var scriptEngine = new ScriptEngine();
             var session = Session.Create(context);
 

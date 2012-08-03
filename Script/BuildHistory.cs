@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Ampere
 {
@@ -28,29 +29,48 @@ namespace Ampere
     /// <summary>
     /// Maintains a history of built files and detects whether a new build is necessary.
     /// </summary>
-    class History
+    class BuildHistory
     {
-        ConcurrentDictionary<string, HistoryEntry> history = new ConcurrentDictionary<string, HistoryEntry>();
+        string path;
+        ConcurrentDictionary<string, HistoryEntry> history;
 
-        public History()
+        public BuildHistory(string historyPath)
+        {
+            path = historyPath;
+            if (File.Exists(historyPath))
+                history = JsonConvert.DeserializeObject<ConcurrentDictionary<string, HistoryEntry>>(File.ReadAllText(historyPath));
+            else
+                history = new ConcurrentDictionary<string, HistoryEntry>();
+        }
+
+        public void Save()
+        {
+            File.WriteAllText(path, JsonConvert.SerializeObject(history));
+        }
+
+        public void BuildSucceeded(BuildInstance instance)
         {
         }
 
-        public bool ShouldBuild(string output, string[] byproducts, string[] inputs, BuildNode pipeline, BuildEnvironment env)
+        public void BuildFailed(BuildInstance instance)
+        {
+        }
+
+        public bool ShouldBuild(BuildInstance instance)
         {
             // do comparisons in order from cheapest to most expensive to try to early out when a change is obvious
             // check 1: see if we have history for this output
             HistoryEntry entry;
-            if (!history.TryGetValue(output.ToLower(), out entry))
+            if (!history.TryGetValue(instance.Output.ToLower(), out entry))
                 return true;
 
             // check 2: make sure the byproducts match
-            var byproductSet = byproducts.Select(b => b.ToLower()).ToSet();
+            var byproductSet = instance.Byproducts.Select(b => b.ToLower()).ToSet();
             if (!byproductSet.SetEquals(entry.Byproducts))
                 return true;
 
             // check 3: compare number and type of pipeline stages
-            var node = pipeline;
+            var node = instance.Pipeline;
             for (int i = 0; i < entry.StageTypes.Count; i++)
             {
                 if (node == null || node.GetType() != entry.StageTypes[i])
@@ -64,7 +84,7 @@ namespace Ampere
                 return true;
 
             // check 4: check for pipeline processor changes
-            node = pipeline;
+            node = instance.Pipeline;
             foreach (var stage in entry.StageHashes)
             {
                 node = node.InputNode;
@@ -72,23 +92,27 @@ namespace Ampere
                     return true;
             }
 
-            // check 5: changes in outputs
-            if (env.OutputChangeDetection != ChangeDetection.None)
+            // check 5: changes in inputs
+            if (instance.Env.InputChangeDetection != ChangeDetection.None)
             {
-                if (CheckChanged(env.OutputChangeDetection, new FileInfo(env.ResolveOutput(output)), entry.OutputCache[0]))
-                    return true;
-
-                for (int i = 0; i < byproducts.Length; i++)
+                for (int i = 0; i < instance.Inputs.Length; i++)
                 {
-                    if (CheckChanged(env.OutputChangeDetection, new FileInfo(env.ResolveOutput(byproducts[i])), entry.OutputCache[i + 1]))
+                    if (CheckChanged(instance.Env.InputChangeDetection, new FileInfo(instance.Env.ResolveInput(instance.Inputs[i])), entry.InputCache[i]))
                         return true;
                 }
             }
 
-            // check 6: changes in inputs
-            if (env.InputChangeDetection != ChangeDetection.None)
+            // check 6: changes in outputs
+            if (instance.Env.OutputChangeDetection != ChangeDetection.None)
             {
+                if (CheckChanged(instance.Env.OutputChangeDetection, new FileInfo(instance.Env.ResolveOutput(instance.Output)), entry.OutputCache[0]))
+                    return true;
 
+                for (int i = 0; i < instance.Byproducts.Length; i++)
+                {
+                    if (CheckChanged(instance.Env.OutputChangeDetection, new FileInfo(instance.Env.ResolveOutput(instance.Byproducts[i])), entry.OutputCache[i + 1]))
+                        return true;
+                }
             }
 
             // at this point, we can safely say that the entire pipeline is the same. no need to do a build

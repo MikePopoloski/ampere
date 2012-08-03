@@ -15,6 +15,7 @@ namespace Ampere
     /// </summary>
     public class BuildContext
     {
+        BuildHistory history;
         List<OutputNode> rules = new List<OutputNode>();
         ConcurrentDictionary<string, Lazy<Task>> runningBuilds = new ConcurrentDictionary<string, Lazy<Task>>();
 
@@ -30,10 +31,11 @@ namespace Ampere
             private set;
         }
 
-        public BuildContext()
+        public BuildContext(string historyPath)
         {
             Env = new BuildEnvironment(this);
             Log = LogManager.GetLogger("Build");
+            history = new BuildHistory(historyPath);
         }
 
         public TransientNode Build(string pattern, params string[] additional)
@@ -87,9 +89,19 @@ namespace Ampere
         {
             // walk down the pipeline and build from the bottom-up
             var currentStage = rule.GetBottomNode();
-            var instance = new BuildInstance(this, match);
-            IEnumerable<Stream> state = null;
+            var inputNode = currentStage as InputNode;
+            var inputs = inputNode != null ? inputNode.Inputs : new string[0];
+            var instance = new BuildInstance(this, match, rule, inputs);            
 
+            // check to see if we even need to do this build
+            if (!history.ShouldBuild(instance))
+            {
+                Log.InfoFormat("Skipping '{0}' (up-to-date).", name);
+                return;
+            }
+
+            // run the pipeline
+            IEnumerable<Stream> state = null;
             while (currentStage != null)
             {
                 // run the current stage, saving the results and passing them on to the next stage in the pipeline

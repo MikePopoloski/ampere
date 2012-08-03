@@ -22,7 +22,7 @@ namespace Ampere
             set;
         }
 
-        public IEnumerable<string> Byproducts
+        public string[] Byproducts
         {
             get;
             set;
@@ -49,14 +49,14 @@ namespace Ampere
         {
             // figure out the final names of each output
             var outputs = new List<string>();
-            outputs.Add(instance.Match.Value);
+            outputs.Add(instance.Output);
             outputs.AddRange(Byproducts.Select(b => instance.Match.Result(b)));
             
             // make sure we have enough inputs to satisfy each output
             var inputArray = inputs.ToArray();
             if (inputArray.Length != outputs.Count)
             {
-                instance.Log(LogLevel.Error, "Number of inputs does not match number of outputs for '{0}' (line {1}).", instance.Match.Value, LineNumber);
+                instance.Log(LogLevel.Error, "Number of inputs does not match number of outputs for '{0}' (line {1}).", instance.Output, LineNumber);
                 return null;
             }
 

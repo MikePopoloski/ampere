@@ -11,6 +11,11 @@ namespace Ampere
     {
         List<string> inputs = new List<string>();
 
+        public string[] Inputs
+        {
+            get { return inputs.ToArray(); }
+        }
+
         public InputNode(string input, string[] additional)
         {
             inputs.Add(input);
