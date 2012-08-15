@@ -21,7 +21,11 @@ namespace Ampere
     /// </summary>
     public class BuildEnvironment
     {
-        BuildContext context;
+        public BuildContext Context
+        {
+            get;
+            private set;
+        }
 
         public ChangeDetection OutputChangeDetection { get; set; }
         public ChangeDetection InputChangeDetection { get; set; }
@@ -34,23 +38,26 @@ namespace Ampere
 
         public BuildEnvironment(BuildContext context)
         {
-            this.context = context;
+            Context = context;
 
             OutputChangeDetection = ChangeDetection.Length;
             InputChangeDetection = ChangeDetection.Length | ChangeDetection.Timestamp | ChangeDetection.Hash;
+
+            InputResolver = Resolvers.PassThrough();
+            OutputResolver = Resolvers.PassThrough();
         }
 
         public string ResolveInput(string name)
         {
             if (!Directory.Exists(InputPath))
             {
-                context.Log.ErrorFormat("Current input path '{0}' does not exist.", InputPath);
+                Context.Log.ErrorFormat("Current input path '{0}' does not exist.", InputPath);
                 return null;
             }
 
             if (InputResolver == null)
             {
-                context.Log.ErrorFormat("No input resolver function set.");
+                Context.Log.ErrorFormat("No input resolver function set.");
                 return null;
             }
 
@@ -65,13 +72,13 @@ namespace Ampere
         {
             if (!Directory.Exists(OutputPath))
             {
-                context.Log.ErrorFormat("Current output path '{0}' does not exist.", OutputPath);
+                Context.Log.ErrorFormat("Current output path '{0}' does not exist.", OutputPath);
                 return null;
             }
 
             if (OutputResolver == null)
             {
-                context.Log.ErrorFormat("No output resolver function set.");
+                Context.Log.ErrorFormat("No output resolver function set.");
                 return null;
             }
 

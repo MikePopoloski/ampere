@@ -38,6 +38,11 @@ namespace Ampere
             history = new BuildHistory(historyPath);
         }
 
+        public DirectoryCache CreateDirectoryCache(string directory)
+        {
+            return new DirectoryCache(this, directory);
+        }
+
         public TransientNode Build(string pattern, params string[] additional)
         {
             return new OutputNode(pattern, 0, additional);

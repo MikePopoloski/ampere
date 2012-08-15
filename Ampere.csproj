@@ -69,6 +69,8 @@
     <Compile Include="Nodes\TransientNode.cs" />
     <Compile Include="Script\BuildInstance.cs" />
     <Compile Include="Script\BuildHistory.cs" />
+    <Compile Include="Script\DirectoryCache.cs" />
+    <Compile Include="Script\Resolvers.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
