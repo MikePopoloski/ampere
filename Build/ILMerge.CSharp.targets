@@ -1,0 +1,16 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Target Name="AfterBuild">
+    <CreateItem Include="@(ReferencePath)" Condition="'%(ReferencePath.IlMerge)'=='true'">
+      <Output TaskParameter="Include" ItemName="IlmergeAssemblies"/>
+    </CreateItem>
+    <Message Text="MERGING: @(IlmergeAssemblies->'%(Filename)')" Importance="High" />
+    <Exec Command="&quot;$(MSBuildThisFileDirectory)Ilmerge.exe&quot; /targetplatform:&quot;v4,C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0&quot; /out:@(MainAssembly) &quot;$(MSBuildProjectDirectory)\@(IntermediateAssembly)&quot; @(IlmergeAssemblies->'&quot;%(FullPath)&quot;', ' ')" />
+  </Target>
+  <Target Name="AfterResolveReferences">
+    <Message Text="Filtering out ilmerge assemblies from ReferenceCopyLocalPaths" Importance="High" />
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.IlMerge)'=='true'" />
+    </ItemGroup>
+  </Target>
+</Project>
