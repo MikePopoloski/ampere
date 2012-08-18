@@ -8,18 +8,23 @@ using CommandLine;
 using CommandLine.Text;
 
 // command line usage
-[assembly: AssemblyUsage("Usage: amp [build-script] [plugin-directory]")]
+[assembly: AssemblyUsage("Usage: amp build-script [options]")]
 [assembly: AssemblyInformationalVersion("1.0")]
 
 namespace Ampere
 {
     class Options : CommandLineOptionsBase
     {
-        [Option("b", "build-script", HelpText = "The path to the build script to run. If not set, the compiler will search for a .cs file that matches the name of the current directory.")]
-        public string BuildScript { get; set; }
+        [ValueList(typeof(List<string>), MaximumElements = 1)]
+        public IList<string> Items { get; set; }
 
         [Option("p", "plugins", HelpText = "The path to the directory containing plugin assemblies. If not set, the build script directory will be used.")]
         public string PluginDirectory { get; set; }
+
+        public string BuildScript
+        {
+            get { return Items.Count > 0 ? Items[0] : null; }
+        }
 
         [HelpOption]
         public string GetUsage()
