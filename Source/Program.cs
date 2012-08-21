@@ -80,6 +80,8 @@ namespace Ampere
                 // run the script
                 log.InfoFormat("Starting build script ({0})...", Path.GetFullPath(options.BuildScript));
                 scriptEngine.ExecuteFile(options.BuildScript, session);
+
+                context.WaitAll();
             }
             catch (CompilationErrorException e)
             {

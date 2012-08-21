@@ -53,6 +53,12 @@ namespace Ampere
             return new OutputNode(pattern, priority, additional);
         }
 
+        public void WaitAll()
+        {
+            while (runningBuilds.Count > 0)
+                Task.WaitAll(runningBuilds.Values.Select(l => l.Value).ToArray());
+        }
+
         public Task Start(string name)
         {
             // find best applicable rule
