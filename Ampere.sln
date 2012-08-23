@@ -8,10 +8,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{2C4B086B
 		Build\ILMerge.CSharp.targets = Build\ILMerge.CSharp.targets
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{F8DA48CB-7562-490A-9DF6-54A21C11939A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextureTools", "Plugins\TextureTools\TextureTools.csproj", "{D021B47B-7F54-4FDD-8ACB-D4C7EB0EFE75}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -22,15 +18,8 @@ Global
 		{58479436-D75A-4A9A-9867-334A0499B6F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58479436-D75A-4A9A-9867-334A0499B6F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{58479436-D75A-4A9A-9867-334A0499B6F4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D021B47B-7F54-4FDD-8ACB-D4C7EB0EFE75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D021B47B-7F54-4FDD-8ACB-D4C7EB0EFE75}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D021B47B-7F54-4FDD-8ACB-D4C7EB0EFE75}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D021B47B-7F54-4FDD-8ACB-D4C7EB0EFE75}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{D021B47B-7F54-4FDD-8ACB-D4C7EB0EFE75} = {F8DA48CB-7562-490A-9DF6-54A21C11939A}
 	EndGlobalSection
 EndGlobal
