@@ -139,9 +139,10 @@ namespace Ampere
             node = instance.Pipeline;
             foreach (var stage in entry.StageHashes)
             {
-                node = node.InputNode;
                 if (stage != node.Hash())
                     return true;
+
+                node = node.InputNode;
             }
 
             // check 5: changes in inputs
