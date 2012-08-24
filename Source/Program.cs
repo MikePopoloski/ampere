@@ -19,6 +19,14 @@ namespace Ampere
 {
     class Program
     {
+        static readonly string[] Namespaces = new[] {
+            "System",
+            "System.IO",
+            "System.Linq",
+            "System.Collections.Generic",
+            "System.Threading.Tasks"
+        };
+
         static readonly string DataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ampere");
 
         static void Main(string[] args)
@@ -59,7 +67,8 @@ namespace Ampere
 
             // load plugins and assemblies
             session.AddReference(typeof(BuildContext).Assembly);
-            session.ImportNamespace(typeof(BuildContext).Namespace);
+            session.AddReference(typeof(Enumerable).Assembly);
+            session.AddReference(typeof(HashSet<>).Assembly);
             foreach (var file in Directory.EnumerateFiles(pluginPath, "*.dll"))
             {
                 // check whether this is a managed assembly
@@ -77,6 +86,11 @@ namespace Ampere
                 {
                 }
             }
+
+            // import default namespaces
+            session.ImportNamespace(typeof(BuildContext).Namespace);
+            foreach (var n in Namespaces)
+                session.ImportNamespace(n);
 
             try
             {
