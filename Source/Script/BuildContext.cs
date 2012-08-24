@@ -99,7 +99,7 @@ namespace Ampere
             })).Value;
 
             // also register the task for any byproducts
-            foreach(var byproduct in chosen.Node.Byproducts)
+            foreach (var byproduct in chosen.Node.Byproducts)
             {
                 var byproductName = chosen.Match.Result(byproduct);
                 runningBuilds.TryAdd(byproductName, new Lazy<Task>(() => task));
@@ -113,8 +113,10 @@ namespace Ampere
             // walk down the pipeline and build from the bottom-up
             var currentStage = rule.GetBottomNode();
             var inputNode = currentStage as InputNode;
-            var inputs = inputNode != null ? inputNode.Inputs : new string[0];
-            var instance = new BuildInstance(this, match, rule, inputs);            
+            var instance = new BuildInstance(this, match, rule);
+
+            inputNode.ResolveNames(instance);
+            rule.ResolveNames(instance);
 
             // check to see if we even need to do this build
             if (!history.ShouldBuild(instance))

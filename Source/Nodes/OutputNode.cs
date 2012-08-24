@@ -45,32 +45,47 @@ namespace Ampere
             return Regex.Match(name, current);
         }
 
+        public bool ResolveNames(BuildInstance instance)
+        {
+            var paths = new List<string>();
+            foreach (var output in Byproducts.Select(b => instance.Match.Result(b)))
+            {
+                var outputPath = instance.Env.ResolveOutput(output);
+                if (string.IsNullOrEmpty(outputPath))
+                {
+                    instance.Log(LogLevel.Error, "Could not resolve output '{0}' (line {1}).", output, LineNumber);
+                    return false;
+                }
+
+                paths.Add(outputPath);
+            }
+
+            instance.OutputPath = instance.Env.ResolveOutput(instance.OutputName);
+            instance.Byproducts = paths.ToArray();
+
+            return true;
+        }
+
         public override IEnumerable<Stream> Evaluate(BuildInstance instance, IEnumerable<Stream> inputs)
         {
             // figure out the final names of each output
             var outputs = new List<string>();
-            outputs.Add(instance.Output);
-            outputs.AddRange(Byproducts.Select(b => instance.Match.Result(b)));
-            
+            outputs.Add(instance.OutputPath);
+            outputs.AddRange(instance.Byproducts);
+
             // make sure we have enough inputs to satisfy each output
             var inputArray = inputs.ToArray();
             if (inputArray.Length != outputs.Count)
             {
-                instance.Log(LogLevel.Error, "Number of inputs does not match number of outputs for '{0}' (line {1}).", instance.Output, LineNumber);
+                instance.Log(LogLevel.Error, "Number of inputs does not match number of outputs for '{0}' (line {1}).", instance.OutputName, LineNumber);
                 return null;
             }
 
             // match each input to an output name
             for (int i = 0; i < inputArray.Length; i++)
             {
-                var outputPath = instance.Env.ResolveOutput(outputs[i]);
-                if (string.IsNullOrEmpty(outputPath))
-                {
-                    instance.Log(LogLevel.Error, "Could not resolve output '{0}' (line {1}).", outputs[i], LineNumber);
-                    return null;
-                }
-
-                 // if we have a filestream, we can do a straight file copy because we know it hasn't been changed
+                // if we have a filestream, we can do a straight file copy because we know it hasn't been changed
+                var outputPath = outputs[i];
                 var stream = inputArray[i];
                 var file = stream as FileStream;
                 if (file != null)

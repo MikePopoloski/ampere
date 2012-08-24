@@ -54,6 +54,10 @@ namespace Ampere
 
         public void Save()
         {
+            var directory = Path.GetDirectoryName(path);
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+
             File.WriteAllText(path, JsonConvert.SerializeObject(history));
         }
 
@@ -74,14 +78,14 @@ namespace Ampere
 
             bool hashInputs = (instance.Env.InputChangeDetection & ChangeDetection.Hash) != 0;
             foreach(var input in instance.Inputs)
-                entry.InputCache.Add(CreateFileEntry(instance.Env.ResolveInput(input), hashInputs));
+                entry.InputCache.Add(CreateFileEntry(input, hashInputs));
 
             bool hashOutputs = (instance.Env.OutputChangeDetection & ChangeDetection.Hash) != 0;
-            entry.OutputCache.Add(CreateFileEntry(instance.Env.ResolveOutput(instance.Output), hashOutputs));
+            entry.OutputCache.Add(CreateFileEntry(instance.OutputPath, hashOutputs));
             foreach(var output in instance.Byproducts)
-                entry.OutputCache.Add(CreateFileEntry(instance.Env.ResolveOutput(output), hashOutputs));
+                entry.OutputCache.Add(CreateFileEntry(output, hashOutputs));
 
-            history.AddOrUpdate(instance.Output.ToLower(), entry, (k, h) => entry);
+            history.AddOrUpdate(instance.OutputName.ToLower(), entry, (k, h) => entry);
         }
 
         FileEntry CreateFileEntry(string file, bool shouldHash)
@@ -101,7 +105,7 @@ namespace Ampere
         {
             // build failed; remove the history entry to force a rebuild.
             HistoryEntry entry;
-            history.TryRemove(instance.Output.ToLower(), out entry);
+            history.TryRemove(instance.OutputName.ToLower(), out entry);
         }
 
         public bool ShouldBuild(BuildInstance instance)
@@ -109,7 +113,7 @@ namespace Ampere
             // do comparisons in order from cheapest to most expensive to try to early out when a change is obvious
             // check 1: see if we have history for this output
             HistoryEntry entry;
-            if (!history.TryGetValue(instance.Output.ToLower(), out entry))
+            if (!history.TryGetValue(instance.OutputName.ToLower(), out entry))
                 return true;
 
             // check 2: make sure the byproducts match
@@ -145,7 +149,7 @@ namespace Ampere
             {
                 for (int i = 0; i < instance.Inputs.Length; i++)
                 {
-                    if (CheckChanged(instance.Env.InputChangeDetection, new FileInfo(instance.Env.ResolveInput(instance.Inputs[i])), entry.InputCache[i]))
+                    if (CheckChanged(instance.Env.InputChangeDetection, new FileInfo(instance.Inputs[i]), entry.InputCache[i]))
                         return true;
                 }
             }
@@ -153,12 +157,12 @@ namespace Ampere
             // check 6: changes in outputs
             if (instance.Env.OutputChangeDetection != ChangeDetection.None)
             {
-                if (CheckChanged(instance.Env.OutputChangeDetection, new FileInfo(instance.Env.ResolveOutput(instance.Output)), entry.OutputCache[0]))
+                if (CheckChanged(instance.Env.OutputChangeDetection, new FileInfo(instance.OutputPath), entry.OutputCache[0]))
                     return true;
 
                 for (int i = 0; i < instance.Byproducts.Length; i++)
                 {
-                    if (CheckChanged(instance.Env.OutputChangeDetection, new FileInfo(instance.Env.ResolveOutput(instance.Byproducts[i])), entry.OutputCache[i + 1]))
+                    if (CheckChanged(instance.Env.OutputChangeDetection, new FileInfo(instance.Byproducts[i]), entry.OutputCache[i + 1]))
                         return true;
                 }
             }

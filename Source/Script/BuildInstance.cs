@@ -25,13 +25,13 @@ namespace Ampere
             private set;
         }
 
-        public Match Match
+        public BuildNode Pipeline
         {
             get;
             private set;
         }
 
-        public BuildNode Pipeline
+        public Match Match
         {
             get;
             private set;
@@ -40,27 +40,32 @@ namespace Ampere
         public string[] Byproducts
         {
             get;
-            private set;
+            internal set;
         }
 
         public string[] Inputs
         {
             get;
-            private set;
+            internal set;
         }
 
-        public string Output
+        public string OutputPath
+        {
+            get;
+            internal set;
+        }
+
+        public string OutputName
         {
             get { return Match.Value; }
         }
 
-        internal BuildInstance(BuildContext context, Match match, OutputNode pipeline, string[] inputs)
+        internal BuildInstance(BuildContext context, Match match, OutputNode pipeline)
         {
             Env = context.Env;
             Match = match;
             Pipeline = pipeline;
             Byproducts = pipeline.Byproducts;
-            Inputs = inputs;
 
             this.context = context;
         }

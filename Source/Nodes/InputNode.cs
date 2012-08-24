@@ -22,7 +22,7 @@ namespace Ampere
             inputs.AddRange(additional);
         }
 
-        public override IEnumerable<Stream> Evaluate(BuildInstance instance, IEnumerable<Stream> unused)
+        public bool ResolveNames(BuildInstance instance)
         {
             // resolve input names into full paths; if any fail, an error occurs
             var paths = new List<string>();
@@ -33,14 +33,20 @@ namespace Ampere
                 if (string.IsNullOrEmpty(path))
                 {
                     instance.Log(LogLevel.Error, "Could not resolve input '{0}' (line {1}).", fullName, LineNumber);
-                    return null;
+                    return false;
                 }
 
                 paths.Add(path);
             }
 
-            // otherwise, open up the filestreams
-            return paths.Select(p => File.OpenRead(p));
+            instance.Inputs = paths.ToArray();
+            return true;
+        }
+
+        public override IEnumerable<Stream> Evaluate(BuildInstance instance, IEnumerable<Stream> unused)
+        {
+            // open up the filestreams
+            return instance.Inputs.Select(p => File.OpenRead(p));
         }
     }
 }
