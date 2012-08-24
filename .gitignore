@@ -17,11 +17,14 @@ Thumbs.db
 *.cache
 *.ilk
 *.log
+*.opensdf
+*.sdf
 [Bb]in
 [Dd]ebug*/
 *.lib
 *.sbr
 obj/
+ipch/
 [Rr]elease*/
 _ReSharper*/
 [Tt]est[Rr]esult*
