@@ -8,22 +8,37 @@ using CommandLine;
 using CommandLine.Text;
 
 // command line usage
-[assembly: AssemblyUsage("Usage: amp build-script [options]")]
+[assembly: AssemblyUsage("Usage: amp [build-script] [plugin-directory] [options]")]
 [assembly: AssemblyInformationalVersion("1.0")]
 
 namespace Ampere
 {
     class Options : CommandLineOptionsBase
     {
+        [Option("l", "loglevel", HelpText = "Indicates the level of logging output, from 0 to 3. Higher values show more information.")]
+        public int LogLevel
+        {
+            get;
+            set;
+        }
+
         [ValueList(typeof(List<string>), MaximumElements = 1)]
         public IList<string> Items { get; set; }
 
-        [Option("p", "plugins", HelpText = "The path to the directory containing plugin assemblies. If not set, the build script directory will be used.")]
-        public string PluginDirectory { get; set; }
+        public string PluginDirectory
+        {
+            get { return Items.Count > 1 ? Items[1] : null; }
+        }
 
         public string BuildScript
         {
             get { return Items.Count > 0 ? Items[0] : null; }
+        }
+
+        public Options()
+        {
+            // default log level is to show everything
+            LogLevel = 3;
         }
 
         [HelpOption]

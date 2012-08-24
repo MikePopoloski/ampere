@@ -45,12 +45,18 @@ namespace Ampere
 
         public TransientNode Build(string pattern, params string[] additional)
         {
-            return new OutputNode(pattern, 0, additional);
+            var node = new OutputNode(pattern, 0, additional);
+            rules.Add(node);
+
+            return node;
         }
 
         public TransientNode Build(string pattern, int priority, params string[] additional)
         {
-            return new OutputNode(pattern, priority, additional);
+            var node = new OutputNode(pattern, priority, additional);
+            rules.Add(node);
+
+            return node;
         }
 
         public void WaitAll()

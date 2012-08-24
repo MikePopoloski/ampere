@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CommandLine;
 using log4net;
@@ -22,14 +23,14 @@ namespace Ampere
 
         static void Main(string[] args)
         {
-            var appender = new ConsoleAppender();
-            appender.Layout = new PatternLayout("%timestamp [%thread] %level - %message%newline");
-            BasicConfigurator.Configure(appender);
-            var log = LogManager.GetLogger("main");
-
+            // parse CLI options
             var options = new Options();
             if (!CommandLineParser.Default.ParseArguments(args, options))
                 return;
+
+            // initialize the logging system
+            Logging.Initialize("%timestamp [%thread] %level - %message%newline", options.LogLevel);
+            var log = LogManager.GetLogger("main");
 
             // if we weren't given a build script, try to find one in the current directory
             string scriptPath = options.BuildScript;
@@ -48,7 +49,8 @@ namespace Ampere
             }
 
             scriptPath = Path.GetFullPath(scriptPath);
-            var pluginPath = options.PluginDirectory ?? Path.GetDirectoryName(scriptPath);
+            var pluginPath = Path.GetFullPath(options.PluginDirectory ?? Path.GetDirectoryName(scriptPath));
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(scriptPath));
 
             // create the script engine
             var context = new BuildContext(Path.Combine(DataDirectory, "history.dat"));
@@ -57,6 +59,7 @@ namespace Ampere
 
             // load plugins and assemblies
             session.AddReference(typeof(BuildContext).Assembly);
+            session.ImportNamespace(typeof(BuildContext).Namespace);
             foreach (var file in Directory.EnumerateFiles(pluginPath, "*.dll"))
             {
                 // check whether this is a managed assembly
@@ -78,8 +81,9 @@ namespace Ampere
             try
             {
                 // run the script
-                log.InfoFormat("Starting build script ({0})...", Path.GetFullPath(options.BuildScript));
-                scriptEngine.ExecuteFile(options.BuildScript, session);
+                log.InfoFormat("Running build script ({0})", scriptPath);
+                log.InfoFormat("Build started at {0}", DateTime.Now);
+                scriptEngine.ExecuteFile(scriptPath, session);
 
                 context.WaitAll();
             }

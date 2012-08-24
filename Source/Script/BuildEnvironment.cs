@@ -36,6 +36,8 @@ namespace Ampere
         public Func<string, string> InputResolver { get; set; }
         public Func<string, string> OutputResolver { get; set; }
 
+        public bool CreateOutputDirectory { get; set; }
+
         public BuildEnvironment(BuildContext context)
         {
             Context = context;
@@ -72,8 +74,13 @@ namespace Ampere
         {
             if (!Directory.Exists(OutputPath))
             {
-                Context.Log.ErrorFormat("Current output path '{0}' does not exist.", OutputPath);
-                return null;
+                if (CreateOutputDirectory)
+                    Directory.CreateDirectory(OutputPath);
+                else
+                {
+                    Context.Log.ErrorFormat("Current output path '{0}' does not exist.", OutputPath);
+                    return null;
+                }
             }
 
             if (OutputResolver == null)

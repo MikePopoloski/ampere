@@ -40,7 +40,7 @@ namespace Ampere
             // allow non-regex wildcard strings to be used
             var current = Pattern;
             if (!Pattern.StartsWith("/") || !Pattern.EndsWith("/"))
-                current = "^" + Regex.Escape(Pattern).Replace(@"\*", ".*").Replace(@"\?", ".") + "$";
+                current = "^" + Regex.Escape(Pattern).Replace(@"\*", "(.*)").Replace(@"\?", "(.)") + "$";
 
             return Regex.Match(name, current);
         }
