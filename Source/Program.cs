@@ -100,6 +100,7 @@ namespace Ampere
                 scriptEngine.ExecuteFile(scriptPath, session);
 
                 context.WaitAll();
+                context.Finished();
             }
             catch (CompilationErrorException e)
             {

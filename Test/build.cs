@@ -17,3 +17,5 @@ void SomeFun()
 
 // start builds
 Start("test.foo");
+
+SomeFun();

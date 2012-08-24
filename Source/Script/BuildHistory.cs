@@ -24,6 +24,15 @@ namespace Ampere
         public List<FileEntry> OutputCache;
         public List<FileEntry> InputCache;
         public List<string> StageHashes;
+
+        public HistoryEntry()
+        {
+            Byproducts = new HashSet<string>();
+            StageTypes = new List<Type>();
+            OutputCache = new List<FileEntry>();
+            InputCache = new List<FileEntry>();
+            StageHashes = new List<string>();
+        }
     }
 
     /// <summary>
@@ -50,10 +59,49 @@ namespace Ampere
 
         public void BuildSucceeded(BuildInstance instance)
         {
+            // build succeeded; create/update the history entry
+            var entry = new HistoryEntry();
+            entry.Byproducts = instance.Byproducts.Select(b => b.ToLower()).ToSet();
+
+            var node = instance.Pipeline;
+            while (node != null)
+            {
+                entry.StageTypes.Add(node.GetType());
+                entry.StageHashes.Add(node.Hash());
+
+                node = node.InputNode;
+            }
+
+            bool hashInputs = (instance.Env.InputChangeDetection & ChangeDetection.Hash) != 0;
+            foreach(var input in instance.Inputs)
+                entry.InputCache.Add(CreateFileEntry(instance.Env.ResolveInput(input), hashInputs));
+
+            bool hashOutputs = (instance.Env.OutputChangeDetection & ChangeDetection.Hash) != 0;
+            entry.OutputCache.Add(CreateFileEntry(instance.Env.ResolveOutput(instance.Output), hashOutputs));
+            foreach(var output in instance.Byproducts)
+                entry.OutputCache.Add(CreateFileEntry(instance.Env.ResolveOutput(output), hashOutputs));
+
+            history.AddOrUpdate(instance.Output.ToLower(), entry, (k, h) => entry);
+        }
+
+        FileEntry CreateFileEntry(string file, bool shouldHash)
+        {
+            var fi = new FileInfo(file);
+            var fe = new FileEntry();
+            fe.Length = fi.Length;
+            fe.Timestamp = fi.LastWriteTimeUtc;
+
+            if (shouldHash)
+                fe.Hash = HashFile(fi);
+
+            return fe;
         }
 
         public void BuildFailed(BuildInstance instance)
         {
+            // build failed; remove the history entry to force a rebuild.
+            HistoryEntry entry;
+            history.TryRemove(instance.Output.ToLower(), out entry);
         }
 
         public bool ShouldBuild(BuildInstance instance)

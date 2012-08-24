@@ -65,6 +65,12 @@ namespace Ampere
                 Task.WaitAll(runningBuilds.Values.Select(l => l.Value).ToArray());
         }
 
+        public void Finished()
+        {
+            // called when the build is completely done and ready to exit
+            history.Save();
+        }
+
         public Task Start(string name)
         {
             // find best applicable rule
@@ -124,11 +130,15 @@ namespace Ampere
                 // run the current stage, saving the results and passing them on to the next stage in the pipeline
                 state = currentStage.Evaluate(instance, state);
                 if (state == null)
+                {
+                    history.BuildFailed(instance);
                     return;
+                }
 
                 currentStage = currentStage.OutputNode;
             }
 
+            history.BuildSucceeded(instance);
             Log.InfoFormat("Build for '{0}' successful.", name);
         }
     }
