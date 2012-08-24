@@ -5,9 +5,8 @@ Game asset build pipeline tool.
 
 TODO:
 
-* Add additional command line options
+* CLI argument pass-through
 * Add TCP notifications
-* Hook up change detection
 * Documentation
 * Example plugins
 * Add other default name resolvers

@@ -37,7 +37,7 @@ namespace Ampere
                 return;
 
             // initialize the logging system
-            Logging.Initialize("%timestamp [%thread] %level - %message%newline", options.LogLevel);
+            Logging.Initialize("%thread> %level - %message%newline", options.LogLevel);
             var log = LogManager.GetLogger("main");
 
             // if we weren't given a build script, try to find one in the current directory
