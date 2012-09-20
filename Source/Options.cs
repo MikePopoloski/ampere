@@ -29,6 +29,13 @@ namespace Ampere
             set;
         }
 
+        [Option("n", "notify", HelpText = "Connection address and port number to notify when files are built.")]
+        public string ConnectionInfo
+        {
+            get;
+            set;
+        }
+
         [ValueList(typeof(List<string>), MaximumElements = 1)]
         public IList<string> Items { get; set; }
 

@@ -6,7 +6,6 @@ Game asset build pipeline tool.
 TODO:
 
 * CLI argument pass-through
-* Add TCP notifications
 * Documentation
 * Example plugins
 * Add other default name resolvers

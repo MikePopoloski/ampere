@@ -67,6 +67,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="FileWatcher.cs" />
     <Compile Include="Logging.cs" />
+    <Compile Include="Notifier.cs" />
     <Compile Include="Script\BuildContext.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="Program.cs" />

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -18,6 +19,7 @@ namespace Ampere
         BuildHistory history;
         List<OutputNode> rules = new List<OutputNode>();
         ConcurrentDictionary<string, Lazy<Task>> runningBuilds = new ConcurrentDictionary<string, Lazy<Task>>();
+        ConcurrentBag<string> builtAssets = new ConcurrentBag<string>();
 
         public BuildEnvironment Env
         {
@@ -72,10 +74,13 @@ namespace Ampere
                 Task.WaitAll(runningBuilds.Values.Select(l => l.Value).ToArray());
         }
 
-        public void Finished()
+        public void Finished(string connectionInfo)
         {
             // called when the build is completely done and ready to exit
             history.Save();
+
+            if (!string.IsNullOrEmpty(connectionInfo))
+                Notifier.Notify(connectionInfo, builtAssets.ToList());
         }
 
         public Task Start(string name)
@@ -148,6 +153,10 @@ namespace Ampere
             }
 
             history.BuildSucceeded(instance);
+            builtAssets.Add(instance.OutputName);
+            foreach (var byproduct in instance.Byproducts)
+                builtAssets.Add(byproduct);
+
             Log.InfoFormat("Build for '{0}' successful.", name);
         }
     }

@@ -1,18 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using CommandLine;
 using log4net;
-using log4net.Appender;
-using log4net.Config;
-using log4net.Layout;
 using Roslyn.Compilers;
 using Roslyn.Scripting;
 using Roslyn.Scripting.CSharp;
@@ -124,7 +116,7 @@ namespace Ampere
                 scriptEngine.ExecuteFile(scriptPath, session);
 
                 context.WaitAll();
-                context.Finished();
+                context.Finished(options.ConnectionInfo);
 
                 log.InfoFormat("Build finished ({0:N2} seconds)", (DateTime.Now - startTime).TotalSeconds);
             }
