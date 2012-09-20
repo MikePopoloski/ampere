@@ -31,11 +31,18 @@ namespace Ampere
             private set;
         }
 
+        public IList<string> ProbedPaths
+        {
+            get;
+            private set;
+        }
+
         public BuildContext(string historyPath)
         {
             Env = new BuildEnvironment(this);
             Log = LogManager.GetLogger("Build");
             history = new BuildHistory(historyPath);
+            ProbedPaths = new List<string>();
         }
 
         public DirectoryCache CreateDirectoryCache(string directory)

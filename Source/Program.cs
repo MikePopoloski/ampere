@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,6 +21,8 @@ namespace Ampere
 {
     class Program
     {
+        static FileWatcher Watcher = new FileWatcher();
+
         static readonly string[] Namespaces = new[] {
             "System",
             "System.IO",
@@ -38,6 +42,25 @@ namespace Ampere
 
             // initialize the logging system
             Logging.Initialize("%thread> %level - %message%newline", options.LogLevel);
+
+            // run continuously if that's what we specified on the command line
+            while (true)
+            {
+                var context = Run(options);
+                if (!options.RunContinuously)
+                    break;
+
+                Console.WriteLine();
+                Console.WriteLine("Waiting for changes...");
+
+                WaitForChanges(options, context);
+
+                Console.WriteLine();
+            }
+        }
+
+        static BuildContext Run(Options options)
+        {
             var log = LogManager.GetLogger("main");
 
             // if we weren't given a build script, try to find one in the current directory
@@ -52,7 +75,7 @@ namespace Ampere
                 else
                 {
                     log.Error("Could not find or open build script.");
-                    return;
+                    return null;
                 }
             }
 
@@ -95,12 +118,15 @@ namespace Ampere
             try
             {
                 // run the script
+                var startTime = DateTime.Now;
                 log.InfoFormat("Running build script ({0})", scriptPath);
-                log.InfoFormat("Build started at {0}", DateTime.Now);
+                log.InfoFormat("Build started at {0}", startTime);
                 scriptEngine.ExecuteFile(scriptPath, session);
 
                 context.WaitAll();
                 context.Finished();
+
+                log.InfoFormat("Build finished ({0:N2} seconds)", (DateTime.Now - startTime).TotalSeconds);
             }
             catch (CompilationErrorException e)
             {
@@ -109,7 +135,34 @@ namespace Ampere
                     var position = error.Location.GetLineSpan(true);
                     log.ErrorFormat("({0}) {1}", position.StartLinePosition, error.Info.GetMessage());
                 }
+
+                return null;
             }
+
+            return context;
+        }
+
+        static void WaitForChanges(Options options, BuildContext context)
+        {
+            Watcher.Clear();
+
+            var startupPath = Path.GetDirectoryName(typeof(Program).Assembly.Location);
+            Watcher.Add(startupPath, "*.cs");
+
+            Directory.SetCurrentDirectory(startupPath);
+            if (!string.IsNullOrEmpty(options.BuildScript))
+                Watcher.Add(Path.GetDirectoryName(Path.GetFullPath(options.BuildScript)), "*.cs");
+
+            if (!string.IsNullOrEmpty(options.PluginDirectory))
+                Watcher.Add(Path.GetFullPath(options.PluginDirectory), "*.dll");
+
+            if (context != null)
+            {
+                foreach (var path in context.ProbedPaths)
+                    Watcher.Add(Path.GetFullPath(path), "*.*");
+            }
+
+            Watcher.Wait();
         }
     }
 }

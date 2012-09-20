@@ -22,6 +22,13 @@ namespace Ampere
             set;
         }
 
+        [Option("c", "continuous", HelpText = "Run the program continuously in the background, detecting file changes to kick off new builds.")]
+        public bool RunContinuously
+        {
+            get;
+            set;
+        }
+
         [ValueList(typeof(List<string>), MaximumElements = 1)]
         public IList<string> Items { get; set; }
 

@@ -67,7 +67,10 @@ namespace Ampere
             if (string.IsNullOrEmpty(input))
                 return null;
 
-            return Path.Combine(InputPath, input);
+            var path = Path.Combine(InputPath, input);
+            Context.ProbedPaths.Add(Path.GetDirectoryName(path));
+
+            return path;
         }
 
         public string ResolveOutput(string name)
@@ -93,7 +96,10 @@ namespace Ampere
             if (string.IsNullOrEmpty(output))
                 return null;
 
-            return Path.Combine(OutputPath, output);
+            var path = Path.Combine(OutputPath, output);
+            Context.ProbedPaths.Add(Path.GetDirectoryName(path));
+
+            return path;
         }
     }
 }
