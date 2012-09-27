@@ -127,8 +127,11 @@ namespace Ampere
             var inputNode = currentStage as InputNode;
             var instance = new BuildInstance(this, match, rule);
 
-            inputNode.ResolveNames(instance);
-            rule.ResolveNames(instance);
+            if (!inputNode.ResolveNames(instance) || !rule.ResolveNames(instance))
+            {
+                Log.ErrorFormat("FAILED! Build for '{0}'", name);
+                return;
+            }
 
             // check to see if we even need to do this build
             if (!history.ShouldBuild(instance))

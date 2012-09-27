@@ -63,7 +63,7 @@ namespace Ampere
             instance.OutputPath = instance.Env.ResolveOutput(instance.OutputName);
             instance.Byproducts = paths.ToArray();
 
-            return true;
+            return !string.IsNullOrEmpty(instance.OutputPath);
         }
 
         public override IEnumerable<Stream> Evaluate(BuildInstance instance, IEnumerable<Stream> inputs)
