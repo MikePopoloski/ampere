@@ -78,7 +78,7 @@ namespace Ampere
             // create the script engine
             var context = new BuildContext(Path.Combine(DataDirectory, "history.dat"));
             var scriptEngine = new ScriptEngine();
-            var session = Session.Create(context);
+            var session = scriptEngine.CreateSession(context);
 
             // load plugins and assemblies
             session.AddReference(typeof(BuildContext).Assembly);
@@ -113,7 +113,7 @@ namespace Ampere
                 var startTime = DateTime.Now;
                 log.InfoFormat("Running build script ({0})", scriptPath);
                 log.InfoFormat("Build started at {0}", startTime);
-                scriptEngine.ExecuteFile(scriptPath, session);
+                session.ExecuteFile(scriptPath);
 
                 context.WaitAll();
                 context.Finished(options.ConnectionInfo);

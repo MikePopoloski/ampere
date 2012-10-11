@@ -5,7 +5,7 @@
       <Output TaskParameter="Include" ItemName="IlmergeAssemblies"/>
     </CreateItem>
     <Message Text="MERGING: @(IlmergeAssemblies->'%(Filename)')" Importance="High" />
-    <Exec Command="&quot;$(MSBuildThisFileDirectory)Ilmerge.exe&quot; /targetplatform:&quot;v4,C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0&quot; /out:@(MainAssembly) &quot;$(MSBuildProjectDirectory)\@(IntermediateAssembly)&quot; @(IlmergeAssemblies->'&quot;%(FullPath)&quot;', ' ')" />
+    <Exec Command="&quot;$(MSBuildThisFileDirectory)ILRepack.exe&quot; /targetplatform:v4 /out:@(MainAssembly) &quot;$(MSBuildProjectDirectory)\@(IntermediateAssembly)&quot; @(IlmergeAssemblies->'&quot;%(FullPath)&quot;', ' ')" />
   </Target>
   <Target Name="AfterResolveReferences" Condition="'$(Configuration)' == 'Release' ">
     <Message Text="Filtering out ilmerge assemblies from ReferenceCopyLocalPaths" Importance="High" />
