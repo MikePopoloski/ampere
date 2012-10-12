@@ -20,6 +20,7 @@ namespace Ampere
         List<OutputNode> rules = new List<OutputNode>();
         ConcurrentDictionary<string, Lazy<Task>> runningBuilds = new ConcurrentDictionary<string, Lazy<Task>>();
         ConcurrentBag<string> builtAssets = new ConcurrentBag<string>();
+        string connectionInfo;
 
         public BuildEnvironment Env
         {
@@ -34,6 +35,12 @@ namespace Ampere
         }
 
         public IList<string> ProbedPaths
+        {
+            get;
+            private set;
+        }
+
+        public bool ShouldRunAgain
         {
             get;
             private set;
@@ -74,12 +81,22 @@ namespace Ampere
                 Task.WaitAll(runningBuilds.Values.Select(l => l.Value).ToArray());
         }
 
-        public void Finished(string connectionInfo)
+        public void Notify(string connectionInfo)
+        {
+            this.connectionInfo = connectionInfo;
+        }
+
+        public void RunAgain()
+        {
+            ShouldRunAgain = true;
+        }
+
+        public void Finished()
         {
             // called when the build is completely done and ready to exit
             history.Save();
 
-            if (!string.IsNullOrEmpty(connectionInfo))
+            if (connectionInfo != null)
                 Notifier.Notify(connectionInfo, builtAssets.ToList());
         }
 
@@ -141,7 +158,7 @@ namespace Ampere
             }
 
             // run the pipeline
-            IEnumerable<Stream> state = null;
+            IEnumerable<object> state = null;
             while (currentStage != null)
             {
                 // run the current stage, saving the results and passing them on to the next stage in the pipeline

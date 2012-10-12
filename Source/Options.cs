@@ -22,20 +22,6 @@ namespace Ampere
             set;
         }
 
-        [Option("c", "continuous", HelpText = "Run the program continuously in the background, detecting file changes to kick off new builds.")]
-        public bool RunContinuously
-        {
-            get;
-            set;
-        }
-
-        [Option("n", "notify", HelpText = "Connection address and port number to notify when files are built.")]
-        public string ConnectionInfo
-        {
-            get;
-            set;
-        }
-
         [ValueList(typeof(List<string>), MaximumElements = 1)]
         public IList<string> Items { get; set; }
 

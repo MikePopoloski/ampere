@@ -11,7 +11,15 @@ namespace Ampere
     /// </summary>
     public abstract class TransientNode : BuildNode
     {
-        public TransientNode Using(object processor)
+        public TransientNode Using(Func<BuildInstance, IEnumerable<object>, IEnumerable<object>> processor)
+        {
+            var node = new ProcessorNode(processor) { OutputNode = this };
+            InputNode = node;
+
+            return node;
+        }
+
+        public TransientNode Using(Func<BuildInstance, IEnumerable<object>, object> processor)
         {
             var node = new ProcessorNode(processor) { OutputNode = this };
             InputNode = node;

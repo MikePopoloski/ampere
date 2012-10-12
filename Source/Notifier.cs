@@ -13,11 +13,20 @@ namespace Ampere
     {
         public static void Notify(string connectionInfo, IList<string> outputs)
         {
-            var client = new TcpClient(Parse(connectionInfo));
-            var writer = new StreamWriter(client.GetStream(), Encoding.UTF8) { AutoFlush = true, NewLine = "\n" };
+            try
+            {
+                var client = new TcpClient();
+                client.Connect(Parse(connectionInfo));
+                var writer = new StreamWriter(client.GetStream(), Encoding.UTF8) { AutoFlush = true, NewLine = "\n" };
 
-            foreach (var output in outputs)
-                writer.WriteLine(output);
+                foreach (var output in outputs)
+                    writer.WriteLine(output);
+
+                client.Close();
+            }
+            catch (SocketException)
+            {
+            }
         }
 
         public static IPEndPoint Parse(string endpointstring)

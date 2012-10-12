@@ -43,7 +43,7 @@ namespace Ampere
             return node;
         }
 
-        public abstract IEnumerable<Stream> Evaluate(BuildInstance instance, IEnumerable<Stream> inputs);
+        public abstract IEnumerable<object> Evaluate(BuildInstance instance, IEnumerable<object> inputs);
 
         public virtual string Hash()
         {

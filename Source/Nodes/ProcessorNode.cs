@@ -9,21 +9,25 @@ namespace Ampere
 {
     class ProcessorNode : TransientNode
     {
-        public object Processor
+        public Func<BuildInstance, IEnumerable<object>, IEnumerable<object>> Processor
         {
             get;
             set;
         }
 
-        public ProcessorNode(object processor)
+        public ProcessorNode(Func<BuildInstance, IEnumerable<object>, IEnumerable<object>> processor)
         {
             Processor = processor;
         }
 
-        public override IEnumerable<Stream> Evaluate(BuildInstance instance, IEnumerable<Stream> inputs)
+        public ProcessorNode(Func<BuildInstance, IEnumerable<object>, object> processor)
+            : this((i, s) => new[] { processor(i, s) })
         {
-            dynamic p = Processor;
-            return p.Run(instance, inputs);
+        }
+
+        public override IEnumerable<object> Evaluate(BuildInstance instance, IEnumerable<object> inputs)
+        {
+            return Processor(instance, inputs);
         }
     }
 }

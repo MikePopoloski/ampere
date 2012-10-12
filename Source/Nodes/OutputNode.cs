@@ -66,7 +66,7 @@ namespace Ampere
             return !string.IsNullOrEmpty(instance.OutputPath);
         }
 
-        public override IEnumerable<Stream> Evaluate(BuildInstance instance, IEnumerable<Stream> inputs)
+        public override IEnumerable<object> Evaluate(BuildInstance instance, IEnumerable<object> inputs)
         {
             // figure out the final names of each output
             var outputs = new List<string>();
@@ -86,10 +86,15 @@ namespace Ampere
             {
                 // if we have a filestream, we can do a straight file copy because we know it hasn't been changed
                 var outputPath = outputs[i];
-                var stream = inputArray[i];
+                var stream = inputArray[i] as Stream;
                 var file = stream as FileStream;
                 if (file != null)
                     File.Copy(file.Name, outputPath, true);
+                else if (stream == null)
+                {
+                    instance.Log(LogLevel.Error, "Inputs to Build() node must all be of type stream. ('{0}' on line {1}).", instance.OutputName, LineNumber);
+                    return null;
+                }
                 else
                 {
                     // otherwise, write to file

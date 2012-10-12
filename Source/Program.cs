@@ -39,14 +39,20 @@ namespace Ampere
             while (true)
             {
                 var context = Run(options);
-                if (!options.RunContinuously)
+                Console.WriteLine();
+
+                if (context == null)
+                {
+                    Console.WriteLine("Press return to try again.");
+                    Console.ReadLine();
+                    continue;
+                }
+
+                if (!context.ShouldRunAgain)
                     break;
 
-                Console.WriteLine();
                 Console.WriteLine("Waiting for changes...");
-
                 WaitForChanges(options, context);
-
                 Console.WriteLine();
             }
         }
@@ -84,15 +90,14 @@ namespace Ampere
             session.AddReference(typeof(BuildContext).Assembly);
             session.AddReference(typeof(Enumerable).Assembly);
             session.AddReference(typeof(HashSet<>).Assembly);
+
             foreach (var file in Directory.EnumerateFiles(pluginPath, "*.dll"))
             {
                 // check whether this is a managed assembly
                 try
                 {
-                    var assembly = Assembly.LoadFrom(file);
-                    session.AddReference(assembly);
-
-                    log.InfoFormat("Loaded plugin: '{0}'", assembly);
+                    session.AddReference(file);
+                    log.InfoFormat("Loaded plugin: '{0}'", file);
                 }
                 catch (BadImageFormatException)
                 {
@@ -116,7 +121,7 @@ namespace Ampere
                 session.ExecuteFile(scriptPath);
 
                 context.WaitAll();
-                context.Finished(options.ConnectionInfo);
+                context.Finished();
 
                 log.InfoFormat("Build finished ({0:N2} seconds)", (DateTime.Now - startTime).TotalSeconds);
             }
