@@ -68,6 +68,7 @@
     <Compile Include="FileWatcher.cs" />
     <Compile Include="Logging.cs" />
     <Compile Include="Notifier.cs" />
+    <Compile Include="ScriptRunner.cs" />
     <Compile Include="Script\BuildContext.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="Program.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="Nodes\TransientNode.cs" />
     <Compile Include="Script\BuildInstance.cs" />
     <Compile Include="Script\BuildHistory.cs" />
+    <Compile Include="Script\BuildResults.cs" />
     <Compile Include="Script\DirectoryCache.cs" />
     <Compile Include="Script\Resolvers.cs" />
   </ItemGroup>

@@ -13,28 +13,39 @@ namespace Ampere
     {
         public static void Notify(string connectionInfo, IList<string> outputs)
         {
+            var client = new TcpClient();
+            var endPoint = Parse(connectionInfo);
+
+            client.BeginConnect(endPoint.Address, endPoint.Port, a => OnConnected(a, client), outputs);
+        }
+
+        static void OnConnected(IAsyncResult asyncResult, TcpClient client)
+        {
             try
             {
-                var client = new TcpClient();
-                client.Connect(Parse(connectionInfo));
+                client.EndConnect(asyncResult);
+
+                var outputs = (List<string>)asyncResult.AsyncState;
                 var writer = new StreamWriter(client.GetStream(), Encoding.UTF8) { AutoFlush = true, NewLine = "\n" };
 
                 foreach (var output in outputs)
                     writer.WriteLine(output);
-
-                client.Close();
             }
             catch (SocketException)
             {
             }
+            finally
+            {
+                client.Close();
+            }
         }
 
-        public static IPEndPoint Parse(string endpointstring)
+        static IPEndPoint Parse(string endpointstring)
         {
             return Parse(endpointstring, -1);
         }
 
-        public static IPEndPoint Parse(string endpointstring, int defaultport)
+        static IPEndPoint Parse(string endpointstring, int defaultport)
         {
             if (string.IsNullOrEmpty(endpointstring) || endpointstring.Trim().Length == 0)
                 throw new ArgumentException("Endpoint descriptor may not be empty.");
@@ -58,7 +69,7 @@ namespace Ampere
                 if (!IPAddress.TryParse(values[0], out ipaddy))
                     ipaddy = GetIPfromHost(values[0]);
             }
-            else if (values.Length > 2) //ipv6 
+            else if (values.Length > 2) // ipv6 
             {
                 // could [a:b:c]:d 
                 if (values[0].StartsWith("[") && values[values.Length - 2].EndsWith("]"))

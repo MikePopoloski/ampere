@@ -15,16 +15,6 @@ namespace Ampere
     {
         static FileWatcher Watcher = new FileWatcher();
 
-        static readonly string[] Namespaces = new[] {
-            "System",
-            "System.IO",
-            "System.Linq",
-            "System.Collections.Generic",
-            "System.Threading.Tasks"
-        };
-
-        static readonly string DataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ampere");
-
         static void Main(string[] args)
         {
             // parse CLI options
@@ -32,114 +22,34 @@ namespace Ampere
             if (!CommandLineParser.Default.ParseArguments(args, options))
                 return;
 
-            // initialize the logging system
-            Logging.Initialize("%thread> %level - %message%newline", options.LogLevel);
-
             // run continuously if that's what we specified on the command line
             while (true)
             {
-                var context = Run(options);
+                // run in a separate domain so we can unload assemblies
+                var domain = AppDomain.CreateDomain("Script Runner", null, AppDomain.CurrentDomain.BaseDirectory, AppDomain.CurrentDomain.RelativeSearchPath, true);
+                var runner = (ScriptRunner)domain.CreateInstanceAndUnwrap(typeof(ScriptRunner).Assembly.FullName, typeof(ScriptRunner).FullName);
+
+                var results = runner.Run(options.BuildScript, options.PluginDirectory, options.LogLevel);
+                AppDomain.Unload(domain);
                 Console.WriteLine();
 
-                if (context == null)
+                if (results == null)
                 {
                     Console.WriteLine("Press return to try again.");
                     Console.ReadLine();
                     continue;
                 }
 
-                if (!context.ShouldRunAgain)
+                if (!results.ShouldRunAgain)
                     break;
 
                 Console.WriteLine("Waiting for changes...");
-                WaitForChanges(options, context);
+                WaitForChanges(options, results);
                 Console.WriteLine();
             }
         }
 
-        static BuildContext Run(Options options)
-        {
-            var log = LogManager.GetLogger("main");
-
-            // if we weren't given a build script, try to find one in the current directory
-            string scriptPath = options.BuildScript;
-            if (string.IsNullOrEmpty(scriptPath) || !File.Exists(scriptPath))
-            {
-                var file = Path.GetDirectoryName(Directory.GetCurrentDirectory()) + ".cs";
-                if (File.Exists(file))
-                    scriptPath = file;
-                else if (File.Exists("build.cs"))
-                    scriptPath = "build.cs";
-                else
-                {
-                    log.Error("Could not find or open build script.");
-                    return null;
-                }
-            }
-
-            scriptPath = Path.GetFullPath(scriptPath);
-            var pluginPath = Path.GetFullPath(options.PluginDirectory ?? Path.GetDirectoryName(scriptPath));
-            Directory.SetCurrentDirectory(Path.GetDirectoryName(scriptPath));
-
-            // create the script engine
-            var context = new BuildContext(Path.Combine(DataDirectory, "history.dat"));
-            var scriptEngine = new ScriptEngine();
-            var session = scriptEngine.CreateSession(context);
-
-            // load plugins and assemblies
-            session.AddReference(typeof(BuildContext).Assembly);
-            session.AddReference(typeof(Enumerable).Assembly);
-            session.AddReference(typeof(HashSet<>).Assembly);
-
-            foreach (var file in Directory.EnumerateFiles(pluginPath, "*.dll"))
-            {
-                // check whether this is a managed assembly
-                try
-                {
-                    session.AddReference(file);
-                    log.InfoFormat("Loaded plugin: '{0}'", file);
-                }
-                catch (BadImageFormatException)
-                {
-                }
-                catch (FileLoadException)
-                {
-                }
-            }
-
-            // import default namespaces
-            session.ImportNamespace(typeof(BuildContext).Namespace);
-            foreach (var n in Namespaces)
-                session.ImportNamespace(n);
-
-            try
-            {
-                // run the script
-                var startTime = DateTime.Now;
-                log.InfoFormat("Running build script ({0})", scriptPath);
-                log.InfoFormat("Build started at {0}", startTime);
-                session.ExecuteFile(scriptPath);
-
-                context.WaitAll();
-                context.Finished();
-
-                log.InfoFormat("Build finished ({0:N2} seconds)", (DateTime.Now - startTime).TotalSeconds);
-            }
-            catch (CompilationErrorException e)
-            {
-                foreach (var error in e.Diagnostics)
-                {
-                    var position = error.Location.GetLineSpan(true);
-                    log.ErrorFormat("({0}) {1}", position.StartLinePosition, error.Info.GetMessage());
-                }
-
-                return null;
-            }
-
-            return context;
-        }
-
-        static void WaitForChanges(Options options, BuildContext context)
+        static void WaitForChanges(Options options, BuildResults results)
         {
             Watcher.Clear();
 
@@ -153,9 +63,9 @@ namespace Ampere
             if (!string.IsNullOrEmpty(options.PluginDirectory))
                 Watcher.Add(Path.GetFullPath(options.PluginDirectory), "*.dll");
 
-            if (context != null)
+            if (results != null)
             {
-                foreach (var path in context.ProbedPaths)
+                foreach (var path in results.ProbedPaths)
                     Watcher.Add(Path.GetFullPath(path), "*.*");
             }
 
