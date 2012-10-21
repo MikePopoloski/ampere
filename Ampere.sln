@@ -3,11 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ampere", "Source\Ampere.csproj", "{58479436-D75A-4A9A-9867-334A0499B6F4}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{2C4B086B-EE58-4B5A-88F7-4096560D9CB6}"
-	ProjectSection(SolutionItems) = preProject
-		Build\ILMerge.CSharp.targets = Build\ILMerge.CSharp.targets
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{1B64BE09-26C3-4980-B605-23138485C176}"
 	ProjectSection(SolutionItems) = preProject
 		Test\build.cs = Test\build.cs

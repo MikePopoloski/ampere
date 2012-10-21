@@ -17,6 +17,8 @@ namespace Ampere
 
         static void Main(string[] args)
         {
+            AppDomain.CurrentDomain.AssemblyResolve += Resolver;
+
             // parse CLI options
             var options = new Options();
             if (!CommandLineParser.Default.ParseArguments(args, options))
@@ -28,8 +30,17 @@ namespace Ampere
                 // run in a separate domain so we can unload assemblies
                 var domain = AppDomain.CreateDomain("Script Runner", null, AppDomain.CurrentDomain.BaseDirectory, AppDomain.CurrentDomain.RelativeSearchPath, true);
                 var runner = (ScriptRunner)domain.CreateInstanceAndUnwrap(typeof(ScriptRunner).Assembly.FullName, typeof(ScriptRunner).FullName);
+                BuildResults results = null;
 
-                var results = runner.Run(options.BuildScript, options.PluginDirectory, options.LogLevel);
+                try
+                {
+                    results = runner.Run(options.BuildScript, options.PluginDirectory, options.LogLevel);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+
                 AppDomain.Unload(domain);
                 Console.WriteLine();
 
@@ -70,6 +81,15 @@ namespace Ampere
             }
 
             Watcher.Wait();
+        }
+
+        static Assembly Resolver(object sender, ResolveEventArgs args)
+        {
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(args.Name);
+            
+            var block = new byte[stream.Length];
+            stream.Read(block, 0, block.Length);
+            return Assembly.Load(block);
         }
     }
 }

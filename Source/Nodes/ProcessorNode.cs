@@ -27,7 +27,15 @@ namespace Ampere
 
         public override IEnumerable<object> Evaluate(BuildInstance instance, IEnumerable<object> inputs)
         {
-            return Processor(instance, inputs);
+            try
+            {
+                return Processor(instance, inputs);
+            }
+            catch (Exception e)
+            {
+                instance.Log(LogLevel.Error, e.ToString());
+                return null;
+            }
         }
     }
 }
