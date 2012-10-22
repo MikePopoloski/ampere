@@ -87,6 +87,13 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded\CommandLine.dll" />
+    <EmbeddedResource Include="Embedded\log4net.dll" />
+    <EmbeddedResource Include="Embedded\Newtonsoft.Json.dll" />
+    <EmbeddedResource Include="Embedded\Roslyn.Compilers.CSharp.dll" />
+    <EmbeddedResource Include="Embedded\Roslyn.Compilers.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

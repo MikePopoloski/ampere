@@ -18,7 +18,11 @@ namespace Ampere
         static void Main(string[] args)
         {
             AppDomain.CurrentDomain.AssemblyResolve += Resolver;
+            Run(args);
+        }
 
+        static void Run(string[] args)
+        {
             // parse CLI options
             var options = new Options();
             if (!CommandLineParser.Default.ParseArguments(args, options))
@@ -29,6 +33,8 @@ namespace Ampere
             {
                 // run in a separate domain so we can unload assemblies
                 var domain = AppDomain.CreateDomain("Script Runner", null, AppDomain.CurrentDomain.BaseDirectory, AppDomain.CurrentDomain.RelativeSearchPath, true);
+                domain.AssemblyResolve += Resolver;
+
                 var runner = (ScriptRunner)domain.CreateInstanceAndUnwrap(typeof(ScriptRunner).Assembly.FullName, typeof(ScriptRunner).FullName);
                 BuildResults results = null;
 
@@ -85,7 +91,8 @@ namespace Ampere
 
         static Assembly Resolver(object sender, ResolveEventArgs args)
         {
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(args.Name);
+            var name = new AssemblyName(args.Name);
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(string.Format("Ampere.Embedded.{0}.dll", name.Name));
             
             var block = new byte[stream.Length];
             stream.Read(block, 0, block.Length);
