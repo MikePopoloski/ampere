@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Ampere
@@ -22,7 +23,7 @@ namespace Ampere
             "System.Threading.Tasks"
         };
 
-        public BuildResults Run(string buildScript, string pluginDirectory, int logLevel)
+        public BuildResults Run(string buildScript, int logLevel)
         {
             // initialize the logging system
             Logging.Initialize("%thread> %level - %message%newline", logLevel);
@@ -46,7 +47,6 @@ namespace Ampere
             }
 
             scriptPath = Path.GetFullPath(scriptPath);
-            var pluginPath = Path.GetFullPath(pluginDirectory ?? Path.GetDirectoryName(scriptPath));
             Directory.SetCurrentDirectory(Path.GetDirectoryName(scriptPath));
 
             // create the script engine
@@ -59,14 +59,21 @@ namespace Ampere
             session.AddReference(typeof(Enumerable).Assembly);
             session.AddReference(typeof(HashSet<>).Assembly);
 
-            foreach (var file in Directory.EnumerateFiles(pluginPath, "*.dll"))
+            var code = File.ReadAllText(scriptPath);
+            var buildResults = new BuildResults();
+
+            foreach (Match match in Regex.Matches(code, "//@addreference:(.*)"))
             {
-                // check whether this is a managed assembly
+                // try to load the plugin
                 try
                 {
-                    var assembly = Assembly.LoadFrom(file);
+                    string path = Path.GetFullPath(match.Groups[1].Value);
+
+                    var assembly = Assembly.LoadFrom(path);
                     session.AddReference(assembly);
                     log.InfoFormat("Loaded plugin: '{0}'", assembly);
+
+                    buildResults.LoadedPlugins.Add(Path.GetDirectoryName(path));
                 }
                 catch (BadImageFormatException)
                 {
@@ -105,11 +112,9 @@ namespace Ampere
                 return null;
             }
 
-            return new BuildResults() 
-            {
-                ShouldRunAgain = context.ShouldRunAgain,
-                ProbedPaths = context.ProbedPaths.Select(p => Path.GetFullPath(p)).ToList()
-            };
+            buildResults.ShouldRunAgain = context.ShouldRunAgain;
+            buildResults.ProbedPaths = context.ProbedPaths.Select(p => Path.GetFullPath(p)).ToList();
+            return buildResults;
         }
     }
 }

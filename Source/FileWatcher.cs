@@ -10,11 +10,25 @@ namespace Ampere
     class FileWatcher
     {
         List<FileSystemWatcher> watchers = new List<FileSystemWatcher>();
+        Dictionary<string, HashSet<string>> paths = new Dictionary<string, HashSet<string>>();
 
         public void Add(string path, string filter)
         {
-            if (Directory.Exists(path))
-                watchers.Add(new FileSystemWatcher(path, filter));
+            HashSet<string> filters;
+            if (!paths.TryGetValue(path, out filters))
+            {
+                filters = new HashSet<string>();
+                paths.Add(path, filters);
+            }
+
+            if (filters.Contains(filter))
+                return;
+
+            if (!Directory.Exists(path))
+                return;
+
+            watchers.Add(new FileSystemWatcher(path, filter));
+            filters.Add(filter);
         }
 
         public void Wait()

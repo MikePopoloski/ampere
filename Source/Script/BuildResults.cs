@@ -20,5 +20,16 @@ namespace Ampere
             get;
             set;
         }
+
+        public IList<string> LoadedPlugins
+        {
+            get;
+            set;
+        }
+
+        public BuildResults()
+        {
+            LoadedPlugins = new List<string>();
+        }
     }
 }

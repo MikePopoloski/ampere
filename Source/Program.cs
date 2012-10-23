@@ -14,6 +14,7 @@ namespace Ampere
     class Program
     {
         static FileWatcher Watcher = new FileWatcher();
+        static readonly string StartupPath = Path.GetDirectoryName(typeof(Program).Assembly.Location);
 
         static void Main(string[] args)
         {
@@ -40,7 +41,7 @@ namespace Ampere
 
                 try
                 {
-                    results = runner.Run(options.BuildScript, options.PluginDirectory, options.LogLevel);
+                    results = runner.Run(options.BuildScript, options.LogLevel);
                 }
                 catch (Exception e)
                 {
@@ -49,6 +50,7 @@ namespace Ampere
 
                 AppDomain.Unload(domain);
                 Console.WriteLine();
+                Directory.SetCurrentDirectory(StartupPath);
 
                 if (results == null)
                 {
@@ -69,21 +71,18 @@ namespace Ampere
         static void WaitForChanges(Options options, BuildResults results)
         {
             Watcher.Clear();
+            Watcher.Add(StartupPath, "*.cs");
 
-            var startupPath = Path.GetDirectoryName(typeof(Program).Assembly.Location);
-            Watcher.Add(startupPath, "*.cs");
-
-            Directory.SetCurrentDirectory(startupPath);
             if (!string.IsNullOrEmpty(options.BuildScript))
                 Watcher.Add(Path.GetDirectoryName(Path.GetFullPath(options.BuildScript)), "*.cs");
-
-            if (!string.IsNullOrEmpty(options.PluginDirectory))
-                Watcher.Add(Path.GetFullPath(options.PluginDirectory), "*.dll");
 
             if (results != null)
             {
                 foreach (var path in results.ProbedPaths)
                     Watcher.Add(Path.GetFullPath(path), "*.*");
+
+                foreach (var path in results.LoadedPlugins)
+                    Watcher.Add(path, "*.dll");
             }
 
             Watcher.Wait();
@@ -93,9 +92,14 @@ namespace Ampere
         {
             var name = new AssemblyName(args.Name);
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(string.Format("Ampere.Embedded.{0}.dll", name.Name));
+
+            if (stream == null)
+                return Assembly.LoadFrom(name.Name + ".dll");
             
             var block = new byte[stream.Length];
             stream.Read(block, 0, block.Length);
+            stream.Close();
+
             return Assembly.Load(block);
         }
     }

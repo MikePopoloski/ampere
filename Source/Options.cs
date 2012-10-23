@@ -25,11 +25,6 @@ namespace Ampere
         [ValueList(typeof(List<string>), MaximumElements = 1)]
         public IList<string> Items { get; set; }
 
-        public string PluginDirectory
-        {
-            get { return Items.Count > 1 ? Items[1] : null; }
-        }
-
         public string BuildScript
         {
             get { return Items.Count > 0 ? Items[0] : null; }
