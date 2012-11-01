@@ -47,6 +47,7 @@ namespace Ampere
                 watcher.Dispose();
 
             watchers.Clear();
+            paths.Clear();
         }
     }
 }
