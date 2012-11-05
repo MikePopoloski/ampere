@@ -92,7 +92,7 @@ namespace Ampere
                     File.Copy(file.Name, outputPath, true);
                 else if (stream == null)
                 {
-                    instance.Log(LogLevel.Error, "Inputs to Build() node must all be of type stream. ('{0}' on line {1}).", instance.OutputName, LineNumber);
+                    instance.Log(LogLevel.Error, "Inputs to Build() node must all be of type stream ('{0}' on line {1}).", instance.OutputName, LineNumber);
                     return null;
                 }
                 else

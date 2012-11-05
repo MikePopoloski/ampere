@@ -30,7 +30,7 @@ namespace Ampere
 
         protected BuildNode()
         {
-            var stack = new StackTrace(3, true);
+            var stack = new StackTrace(2, true);
             LineNumber = stack.GetFrame(0).GetFileLineNumber();
         }
 
