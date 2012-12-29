@@ -91,8 +91,10 @@ namespace Ampere
         static Assembly Resolver(object sender, ResolveEventArgs args)
         {
             var name = new AssemblyName(args.Name);
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(string.Format("Ampere.Embedded.{0}.dll", name.Name));
+            if (name.Name.Contains(".resources"))   // hack to avoid trying to satisfy resource requests
+                return null;
 
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(string.Format("Ampere.Embedded.{0}.dll", name.Name));
             if (stream == null)
                 return Assembly.LoadFrom(name.Name + ".dll");
             

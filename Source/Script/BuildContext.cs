@@ -18,7 +18,7 @@ namespace Ampere
     {
         BuildHistory history;
         List<OutputNode> rules = new List<OutputNode>();
-        ConcurrentDictionary<string, Lazy<Task>> runningBuilds = new ConcurrentDictionary<string, Lazy<Task>>();
+        ConcurrentDictionary<string, Lazy<Task<BuildInstance>>> runningBuilds = new ConcurrentDictionary<string, Lazy<Task<BuildInstance>>>();
         ConcurrentBag<string> builtAssets = new ConcurrentBag<string>();
         string connectionInfo;
 
@@ -100,7 +100,7 @@ namespace Ampere
                 Notifier.Notify(connectionInfo, builtAssets.ToList());
         }
 
-        public Task Start(string name)
+        public Task<BuildInstance> Start(string name, bool tempBuild = false)
         {
             // find best applicable rule
             var best = rules
@@ -120,9 +120,10 @@ namespace Ampere
 
             // we've found the rule we will use. queue up the task to build the asset, or return the current one if it's already being built
             var chosen = best.First();
-            var task = runningBuilds.GetOrAdd(name, new Lazy<Task>(() =>
+            var task = runningBuilds.GetOrAdd(name, new Lazy<Task<BuildInstance>>(() =>
             {
-                var job = Task.Run(() => InternalStart(name, chosen.Node, chosen.Match));
+                var instance = new BuildInstance(this, chosen.Match, chosen.Node, tempBuild);
+                var job = Task.Run(() => InternalStart(name, chosen.Node, instance));
                 job.ContinueWith(t => runningBuilds.Remove(name));
                 return job;
             })).Value;
@@ -131,30 +132,29 @@ namespace Ampere
             foreach (var byproduct in chosen.Node.Byproducts)
             {
                 var byproductName = chosen.Match.Result(byproduct);
-                runningBuilds.TryAdd(byproductName, new Lazy<Task>(() => task));
+                runningBuilds.TryAdd(byproductName, new Lazy<Task<BuildInstance>>(() => task));
             }
 
             return task;
         }
 
-        void InternalStart(string name, OutputNode rule, Match match)
+        BuildInstance InternalStart(string name, OutputNode rule, BuildInstance instance)
         {
             // walk down the pipeline and build from the bottom-up
             var currentStage = rule.GetBottomNode();
             var inputNode = currentStage as InputNode;
-            var instance = new BuildInstance(this, match, rule);
 
             if (!inputNode.ResolveNames(instance) || !rule.ResolveNames(instance))
             {
                 Log.ErrorFormat("FAILED! Build for '{0}'", name);
-                return;
+                return null;
             }
 
             // check to see if we even need to do this build
             if (!history.ShouldBuild(instance))
             {
                 Log.InfoFormat("Skipping '{0}' (up-to-date).", name);
-                return;
+                return null;
             }
 
             // run the pipeline
@@ -166,7 +166,7 @@ namespace Ampere
                 if (state == null)
                 {
                     history.BuildFailed(instance);
-                    return;
+                    return null;
                 }
 
                 currentStage = currentStage.OutputNode;
@@ -178,6 +178,7 @@ namespace Ampere
                 builtAssets.Add(byproduct);
 
             Log.InfoFormat("Build for '{0}' successful.", name);
+            return instance;
         }
     }
 }

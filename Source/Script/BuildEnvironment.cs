@@ -32,6 +32,7 @@ namespace Ampere
 
         public string InputPath { get; set; }
         public string OutputPath { get; set; }
+        public string TempPath { get; set; }
 
         public Func<string, string> InputResolver { get; set; }
         public Func<string, string> OutputResolver { get; set; }
@@ -41,6 +42,7 @@ namespace Ampere
         public BuildEnvironment(BuildContext context)
         {
             Context = context;
+            TempPath = Path.GetTempPath();
 
             OutputChangeDetection = ChangeDetection.Length;
             InputChangeDetection = ChangeDetection.Length | ChangeDetection.Timestamp | ChangeDetection.Hash;
@@ -100,6 +102,21 @@ namespace Ampere
             Context.ProbedPaths.Add(Path.GetDirectoryName(path));
 
             return path;
+        }
+
+        public string ResolveTemp(string name)
+        {
+            if (OutputResolver == null)
+            {
+                Context.Log.ErrorFormat("No output resolver function set.");
+                return null;
+            }
+
+            var output = OutputResolver(name);
+            if (string.IsNullOrEmpty(output))
+                return null;
+
+            return Path.Combine(TempPath, output);
         }
     }
 }

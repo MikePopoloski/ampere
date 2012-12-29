@@ -50,7 +50,10 @@ namespace Ampere
             var paths = new List<string>();
             foreach (var output in Byproducts.Select(b => instance.Match.Result(b)))
             {
-                var outputPath = instance.Env.ResolveOutput(output);
+                var outputPath = instance.IsTempBuild ?
+                    instance.Env.ResolveTemp(output) :
+                    instance.Env.ResolveOutput(output);
+
                 if (string.IsNullOrEmpty(outputPath))
                 {
                     instance.Log(LogLevel.Error, "Could not resolve output '{0}' (line {1}).", output, LineNumber);
@@ -60,7 +63,7 @@ namespace Ampere
                 paths.Add(outputPath);
             }
 
-            instance.OutputPath = instance.Env.ResolveOutput(instance.OutputName);
+            instance.OutputPath = instance.IsTempBuild ? instance.Env.ResolveTemp(instance.OutputName) : instance.Env.ResolveOutput(instance.OutputName);
             instance.Byproducts = paths.ToArray();
 
             return !string.IsNullOrEmpty(instance.OutputPath);

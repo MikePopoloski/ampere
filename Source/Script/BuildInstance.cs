@@ -37,6 +37,12 @@ namespace Ampere
             private set;
         }
 
+        public bool IsTempBuild
+        {
+            get;
+            private set;
+        }
+
         public string[] Byproducts
         {
             get;
@@ -60,12 +66,13 @@ namespace Ampere
             get { return Match.Value; }
         }
 
-        internal BuildInstance(BuildContext context, Match match, OutputNode pipeline)
+        internal BuildInstance(BuildContext context, Match match, OutputNode pipeline, bool tempBuild)
         {
             Env = context.Env;
             Match = match;
             Pipeline = pipeline;
             Byproducts = pipeline.Byproducts;
+            IsTempBuild = tempBuild;
 
             this.context = context;
         }
@@ -90,6 +97,16 @@ namespace Ampere
                     context.Log.ErrorFormat(message, args);
                     break;
             }
+        }
+
+        public Task Start(string name)
+        {
+            return context.Start(name);
+        }
+
+        public BuildInstance StartTemp(string name)
+        {
+            return context.Start(name, true).Result;
         }
     }
 }
