@@ -61,6 +61,12 @@ namespace Ampere
             internal set;
         }
 
+        public IEnumerable<object> Results
+        {
+            get;
+            internal set;
+        }
+
         public string OutputName
         {
             get { return Match.Value; }
@@ -106,7 +112,10 @@ namespace Ampere
 
         public BuildInstance StartTemp(string name)
         {
-            return context.Start(name, true).Result;
+            var task = context.Start(name, true);
+            if (task == null)
+                return null;
+            return task.Result;
         }
     }
 }

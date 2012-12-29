@@ -38,6 +38,7 @@ namespace Ampere
         public Func<string, string> OutputResolver { get; set; }
 
         public bool CreateOutputDirectory { get; set; }
+        public bool WriteTempBuilds { get; set; }
 
         public BuildEnvironment(BuildContext context)
         {
