@@ -86,7 +86,7 @@ namespace Ampere
 
             instance.Results = inputs;
             if (instance.IsTempBuild && !instance.Env.WriteTempBuilds)
-                return Enumerable.Empty<Stream>();
+                return null;
 
             // match each input to an output name
             for (int i = 0; i < inputArray.Length; i++)

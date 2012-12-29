@@ -11,7 +11,7 @@ namespace Ampere
 {
     class ExternalNode : TransientNode
     {
-        const string KnownReplacements = @"\$\(Output(\[\d\])?\)|\$\(Input(\[\d\])\)|\$\(Name\)|\$\d";
+        const string KnownReplacements = @"\$\(Output(\[\d\])?\)|\$\(Input(\[\d\])\)|\$\(Name\)|\$\(TempName\)|\$\d";
 
         string fileName;
         string arguments;
@@ -20,7 +20,7 @@ namespace Ampere
 
         public ExternalNode(string fileName, string arguments, RunOptions options, string[] outputs)
         {
-            this.fileName = fileName;
+            this.fileName = Environment.ExpandEnvironmentVariables(fileName);
             this.arguments = arguments;
             this.outputs = outputs;
             this.options = options;
@@ -36,9 +36,9 @@ namespace Ampere
 
             // perform argument replacement
             var inputArray = inputs.ToArray();
-            arguments = Regex.Replace(arguments, KnownReplacements, m => Replacer(instance, inputArray, m));
+            string currentArguments = Regex.Replace(arguments, KnownReplacements, m => Replacer(instance, inputArray, m));
 
-            var startInfo = new ProcessStartInfo(fileName, arguments);
+            var startInfo = new ProcessStartInfo(fileName, currentArguments);
             startInfo.CreateNoWindow = true;
             startInfo.UseShellExecute = false;
             startInfo.RedirectStandardOutput = (options & RunOptions.RedirectOutput) != 0;
@@ -79,6 +79,9 @@ namespace Ampere
                 char type = match.Value[2];
                 if (type == 'N')
                     return instance.OutputName;
+
+                if (type == 'T')
+                    return instance.Env.ResolveTemp(instance.OutputName);
 
                 if (type == 'I')
                 {

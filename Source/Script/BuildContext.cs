@@ -165,6 +165,9 @@ namespace Ampere
                 state = currentStage.Evaluate(instance, state);
                 if (state == null)
                 {
+                    if (instance.IsTempBuild && currentStage is OutputNode)
+                        return instance;
+
                     history.BuildFailed(instance);
                     return null;
                 }
