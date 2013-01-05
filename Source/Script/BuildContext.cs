@@ -21,6 +21,7 @@ namespace Ampere
         ConcurrentDictionary<string, Lazy<Task<BuildInstance>>> runningBuilds = new ConcurrentDictionary<string, Lazy<Task<BuildInstance>>>();
         ConcurrentBag<string> builtAssets = new ConcurrentBag<string>();
         string connectionInfo;
+        bool fullRebuild;
 
         public BuildEnvironment Env
         {
@@ -46,12 +47,13 @@ namespace Ampere
             private set;
         }
 
-        public BuildContext(string historyPath)
+        public BuildContext(string historyPath, bool fullRebuild)
         {
             Env = new BuildEnvironment(this);
             Log = LogManager.GetLogger("Build");
             history = new BuildHistory(historyPath);
             ProbedPaths = new List<string>();
+            this.fullRebuild = fullRebuild;
         }
 
         public DirectoryCache CreateDirectoryCache(string directory)
@@ -151,7 +153,7 @@ namespace Ampere
             }
 
             // check to see if we even need to do this build
-            if (!history.ShouldBuild(instance))
+            if (!fullRebuild && !history.ShouldBuild(instance))
             {
                 Log.InfoFormat("Skipping '{0}' (up-to-date).", name);
                 return null;

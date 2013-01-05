@@ -23,7 +23,7 @@ namespace Ampere
             "System.Threading.Tasks"
         };
 
-        public BuildResults Run(string buildScript, int logLevel)
+        public BuildResults Run(string buildScript, int logLevel, bool fullRebuild)
         {
             // initialize the logging system
             Logging.Initialize("%thread> %level - %message%newline", logLevel);
@@ -50,7 +50,7 @@ namespace Ampere
             Directory.SetCurrentDirectory(Path.GetDirectoryName(scriptPath));
 
             // create the script engine
-            var context = new BuildContext(Path.Combine(DataDirectory, "history.dat"));
+            var context = new BuildContext(Path.Combine(DataDirectory, "history.dat"), fullRebuild);
             var scriptEngine = new ScriptEngine();
             var session = scriptEngine.CreateSession(context);
 

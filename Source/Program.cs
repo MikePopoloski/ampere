@@ -8,12 +8,15 @@ using log4net;
 using Roslyn.Compilers;
 using Roslyn.Scripting;
 using Roslyn.Scripting.CSharp;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace Ampere
 {
     class Program
     {
         static FileWatcher Watcher = new FileWatcher();
+        static bool nextBuildIsRebuild;
         static readonly string StartupPath = Path.GetDirectoryName(typeof(Program).Assembly.Location);
 
         static void Main(string[] args)
@@ -41,13 +44,14 @@ namespace Ampere
 
                 try
                 {
-                    results = runner.Run(options.BuildScript, options.LogLevel);
+                    results = runner.Run(options.BuildScript, options.LogLevel, nextBuildIsRebuild);
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
                 }
 
+                nextBuildIsRebuild = false;
                 AppDomain.Unload(domain);
                 Console.WriteLine();
                 Directory.SetCurrentDirectory(StartupPath);
@@ -62,7 +66,7 @@ namespace Ampere
                 if (!results.ShouldRunAgain)
                     break;
 
-                Console.WriteLine("Waiting for changes...");
+                Console.WriteLine("Waiting for changes... (press enter to force a rebuild)");
                 WaitForChanges(options, results);
                 Console.WriteLine();
             }
@@ -85,7 +89,21 @@ namespace Ampere
                     Watcher.Add(path, "*.dll");
             }
 
-            Watcher.Wait();
+            var waitTask = Task.Run(() => Watcher.Wait());
+            while (!waitTask.IsCompleted)
+            {
+                if (Console.KeyAvailable)
+                {
+                    var key = Console.ReadKey(true);
+                    if (key.Key == ConsoleKey.Enter)
+                    {
+                        nextBuildIsRebuild = true;
+                        break;
+                    }
+                }
+
+                Thread.Sleep(0);
+            }
         }
 
         static Assembly Resolver(object sender, ResolveEventArgs args)
