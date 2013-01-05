@@ -19,6 +19,12 @@ namespace Ampere
     {
         BuildContext context;
 
+        internal bool TempBuildFailed
+        {
+            get;
+            private set;
+        }
+
         public BuildEnvironment Env
         {
             get;
@@ -115,7 +121,12 @@ namespace Ampere
             var task = context.Start(name, true);
             if (task == null)
                 return null;
-            return task.Result;
+            
+            var result = task.Result;
+            if (result == null)
+                TempBuildFailed = true;
+
+            return result;
         }
     }
 }

@@ -106,7 +106,7 @@ namespace Ampere
                 {
                     // otherwise, write to file
                     stream.Seek(0, SeekOrigin.Begin);
-                    using (var outputStream = File.OpenWrite(outputPath))
+                    using (var outputStream = File.Create(outputPath))
                         stream.CopyTo(outputStream);
                 }
 

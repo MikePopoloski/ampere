@@ -177,6 +177,12 @@ namespace Ampere
                 currentStage = currentStage.OutputNode;
             }
 
+            if (instance.TempBuildFailed)
+            {
+                history.BuildFailed(instance);
+                return null;
+            }
+
             history.BuildSucceeded(instance);
             builtAssets.Add(instance.OutputName);
             foreach (var byproduct in instance.Byproducts)
