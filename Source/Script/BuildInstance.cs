@@ -25,6 +25,12 @@ namespace Ampere
             private set;
         }
 
+        internal List<BuildInstance> TempBuilds
+        {
+            get;
+            private set;
+        }
+
         public BuildEnvironment Env
         {
             get;
@@ -87,6 +93,7 @@ namespace Ampere
             IsTempBuild = tempBuild;
 
             this.context = context;
+            TempBuilds = new List<BuildInstance>();
         }
 
         public void Log(LogLevel level, string message, params object[] args)
@@ -125,6 +132,8 @@ namespace Ampere
             var result = task.Result;
             if (result == null)
                 TempBuildFailed = true;
+            else
+                TempBuilds.Add(result);
 
             return result;
         }

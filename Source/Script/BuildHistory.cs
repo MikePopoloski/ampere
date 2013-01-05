@@ -17,6 +17,20 @@ namespace Ampere
         public string Hash;
     }
 
+    class TempEntry
+    {
+        public List<FileEntry> Inputs;
+        public List<string> InputPaths;
+        public List<TempEntry> TempDependencies;
+
+        public TempEntry()
+        {
+            Inputs = new List<FileEntry>();
+            InputPaths = new List<string>();
+            TempDependencies = new List<TempEntry>();
+        }
+    }
+
     class HistoryEntry
     {
         public HashSet<string> Byproducts;
@@ -24,6 +38,7 @@ namespace Ampere
         public List<FileEntry> OutputCache;
         public List<FileEntry> InputCache;
         public List<string> StageHashes;
+        public List<TempEntry> TempDependencies;
 
         public HistoryEntry()
         {
@@ -32,6 +47,7 @@ namespace Ampere
             OutputCache = new List<FileEntry>();
             InputCache = new List<FileEntry>();
             StageHashes = new List<string>();
+            TempDependencies = new List<TempEntry>();
         }
     }
 
@@ -77,28 +93,19 @@ namespace Ampere
             }
 
             bool hashInputs = (instance.Env.InputChangeDetection & ChangeDetection.Hash) != 0;
-            foreach(var input in instance.Inputs)
+            foreach (var input in instance.Inputs)
                 entry.InputCache.Add(CreateFileEntry(input, hashInputs));
 
             bool hashOutputs = (instance.Env.OutputChangeDetection & ChangeDetection.Hash) != 0;
             entry.OutputCache.Add(CreateFileEntry(instance.OutputPath, hashOutputs));
-            foreach(var output in instance.Byproducts)
+            foreach (var output in instance.Byproducts)
                 entry.OutputCache.Add(CreateFileEntry(output, hashOutputs));
 
+            // create entries for each dependent temp build
+            foreach (var build in instance.TempBuilds)
+                entry.TempDependencies.Add(CreateTempEntry(build));
+
             history.AddOrUpdate(instance.OutputName.ToLower(), entry, (k, h) => entry);
-        }
-
-        FileEntry CreateFileEntry(string file, bool shouldHash)
-        {
-            var fi = new FileInfo(file);
-            var fe = new FileEntry();
-            fe.Length = fi.Length;
-            fe.Timestamp = fi.LastWriteTimeUtc;
-
-            if (shouldHash)
-                fe.Hash = HashFile(fi);
-
-            return fe;
         }
 
         public void BuildFailed(BuildInstance instance)
@@ -168,8 +175,56 @@ namespace Ampere
                 }
             }
 
+            // check 7: look at any dependent temp builds and see if they have been changed
+            if (instance.Env.InputChangeDetection != ChangeDetection.None)
+            {
+                if (entry.TempDependencies.Any(t => TempInputsHaveChanged(t, instance.Env.InputChangeDetection)))
+                    return true;
+            }
+
             // at this point, we can safely say that the entire pipeline is the same. no need to do a build
             return false;
+        }
+
+        bool TempInputsHaveChanged(TempEntry entry, ChangeDetection detection)
+        {
+            for (int i = 0; i < entry.Inputs.Count; i++)
+            {
+                if (CheckChanged(detection, new FileInfo(entry.InputPaths[i]), entry.Inputs[i]))
+                    return true;
+            }
+
+            return entry.TempDependencies.Any(t => TempInputsHaveChanged(t, detection));
+        }
+
+        TempEntry CreateTempEntry(BuildInstance instance)
+        {
+            var entry = new TempEntry();
+            bool hashInputs = (instance.Env.InputChangeDetection & ChangeDetection.Hash) != 0;
+            foreach (var input in instance.Inputs)
+            {
+                entry.Inputs.Add(CreateFileEntry(input, hashInputs));
+                entry.InputPaths.Add(input);
+            }
+
+            // create entries for each dependent temp build
+            foreach (var build in instance.TempBuilds)
+                entry.TempDependencies.Add(CreateTempEntry(build));
+
+            return entry;
+        }
+
+        FileEntry CreateFileEntry(string file, bool shouldHash)
+        {
+            var fi = new FileInfo(file);
+            var fe = new FileEntry();
+            fe.Length = fi.Length;
+            fe.Timestamp = fi.LastWriteTimeUtc;
+
+            if (shouldHash)
+                fe.Hash = HashFile(fi);
+
+            return fe;
         }
 
         bool CheckChanged(ChangeDetection detection, FileInfo file, FileEntry entry)
