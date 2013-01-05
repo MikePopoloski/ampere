@@ -11,7 +11,8 @@ namespace Ampere
     {
         None = 0,
         RedirectOutput = 1,
-        ExpectZeroReturnCode = 2
+        RedirectError = 2,
+        DontCheckResultCode = 4
     }
 
     /// <summary>
@@ -45,7 +46,7 @@ namespace Ampere
 
         public TransientNode Run(string fileName, string arguments, params string[] outputs)
         {
-            var node = new ExternalNode(fileName, arguments, RunOptions.ExpectZeroReturnCode | RunOptions.RedirectOutput, outputs) { OutputNode = this };
+            var node = new ExternalNode(fileName, arguments, RunOptions.RedirectError, outputs) { OutputNode = this };
             InputNode = node;
 
             return node;

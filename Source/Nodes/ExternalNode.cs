@@ -42,6 +42,7 @@ namespace Ampere
             startInfo.CreateNoWindow = true;
             startInfo.UseShellExecute = false;
             startInfo.RedirectStandardOutput = (options & RunOptions.RedirectOutput) != 0;
+            startInfo.RedirectStandardError = (options & RunOptions.RedirectError) != 0;
 
             var process = new Process();
             process.StartInfo = startInfo;
@@ -52,11 +53,23 @@ namespace Ampere
                     instance.Log(LogLevel.Info, e.Data);
             };
 
+            process.ErrorDataReceived += (o, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                    instance.Log(LogLevel.Error, e.Data);
+            };
+
             process.Start();
-            process.BeginOutputReadLine();
+
+            if (startInfo.RedirectStandardOutput)
+                process.BeginOutputReadLine();
+
+            if (startInfo.RedirectStandardError)
+                process.BeginErrorReadLine();
+
             process.WaitForExit();
 
-            if ((options & RunOptions.ExpectZeroReturnCode) != 0 && process.ExitCode != 0)
+            if ((options & RunOptions.DontCheckResultCode) == 0 && process.ExitCode != 0)
             {
                 instance.Log(LogLevel.Error, "Running tool '{0}' failed with result code {1}. (line {2})", fileName, process.ExitCode, LineNumber);
                 return null;
