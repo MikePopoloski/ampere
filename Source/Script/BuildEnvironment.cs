@@ -60,7 +60,7 @@ namespace Ampere
             TempPath = Path.GetTempPath();
 
             OutputChangeDetection = ChangeDetection.Length;
-            InputChangeDetection = ChangeDetection.Length | ChangeDetection.Timestamp | ChangeDetection.Hash;
+            InputChangeDetection = ChangeDetection.Length /*| ChangeDetection.Timestamp*/ | ChangeDetection.Hash;
 
             InputResolver = Resolvers.PassThrough();
             OutputResolver = Resolvers.PassThrough();

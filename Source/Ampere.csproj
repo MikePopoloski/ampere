@@ -24,6 +24,7 @@
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <UseVSHostingProcess>false</UseVSHostingProcess>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -33,6 +34,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CommandLine, Version=1.9.3.19, Culture=neutral, processorArchitecture=MSIL">
@@ -66,6 +68,7 @@
   <ItemGroup>
     <Compile Include="Extensions.cs" />
     <Compile Include="FileWatcher.cs" />
+    <Compile Include="Murmur.cs" />
     <Compile Include="Logging.cs" />
     <Compile Include="Nodes\ExternalNode.cs" />
     <Compile Include="Notifier.cs" />

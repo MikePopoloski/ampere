@@ -56,6 +56,8 @@ namespace Ampere
     /// </summary>
     class BuildHistory
     {
+        const uint HashSeed = 144;
+
         string path;
         ConcurrentDictionary<string, HistoryEntry> history;
 
@@ -246,11 +248,8 @@ namespace Ampere
 
         string HashFile(FileInfo file)
         {
-            using (var md5 = MD5.Create())
-            {
-                using (var stream = file.OpenRead())
-                    return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", "").ToLower();
-            }
+            using (var stream = file.OpenRead())
+                return Murmur.Hash(stream, HashSeed).ToString();
         }
     }
 }

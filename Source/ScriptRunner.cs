@@ -50,7 +50,8 @@ namespace Ampere
             Directory.SetCurrentDirectory(Path.GetDirectoryName(scriptPath));
 
             // create the script engine
-            var context = new BuildContext(Path.Combine(DataDirectory, "history.dat"), fullRebuild);
+            string historyPath = Path.Combine(DataDirectory, Murmur.Hash(scriptPath, 144) + "_history.dat");
+            var context = new BuildContext(historyPath, fullRebuild);
             var scriptEngine = new ScriptEngine();
             var session = scriptEngine.CreateSession(context);
 
@@ -61,27 +62,6 @@ namespace Ampere
 
             var code = File.ReadAllText(scriptPath);
             var buildResults = new BuildResults();
-
-            foreach (Match match in Regex.Matches(code, "//@addreference:(.*)"))
-            {
-                // try to load the plugin
-                try
-                {
-                    string path = Path.GetFullPath(match.Groups[1].Value);
-
-                    var assembly = Assembly.LoadFrom(path);
-                    session.AddReference(assembly);
-                    log.InfoFormat("Loaded plugin: '{0}'", assembly);
-
-                    buildResults.LoadedPlugins.Add(Path.GetDirectoryName(path));
-                }
-                catch (BadImageFormatException)
-                {
-                }
-                catch (FileLoadException)
-                {
-                }
-            }
 
             // import default namespaces
             session.ImportNamespace(typeof(BuildContext).Namespace);
