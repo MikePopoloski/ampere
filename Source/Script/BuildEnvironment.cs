@@ -21,6 +21,8 @@ namespace Ampere
     /// </summary>
     public class BuildEnvironment
     {
+        string inputPath;
+
         public BuildContext Context
         {
             get;
@@ -30,7 +32,19 @@ namespace Ampere
         public ChangeDetection OutputChangeDetection { get; set; }
         public ChangeDetection InputChangeDetection { get; set; }
 
-        public string InputPath { get; set; }
+        public string InputPath
+        {
+            get { return inputPath; }
+            set
+            {
+                if (inputPath == value)
+                    return;
+
+                inputPath = value;
+                Context.ProbedPaths.Add(inputPath);
+            }
+        }
+
         public string OutputPath { get; set; }
         public string TempPath { get; set; }
 
@@ -70,10 +84,7 @@ namespace Ampere
             if (string.IsNullOrEmpty(input))
                 return null;
 
-            var path = Path.Combine(InputPath, input);
-            Context.ProbedPaths.Add(Path.GetDirectoryName(path));
-
-            return path;
+            return Path.Combine(InputPath, input);
         }
 
         public string ResolveOutput(string name)

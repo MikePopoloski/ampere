@@ -11,7 +11,7 @@ namespace Ampere
 {
     class ExternalNode : TransientNode
     {
-        const string KnownReplacements = @"\$\(Output(\[\d\])?\)|\$\(Input(\[\d\])\)|\$\(Name\)|\$\(TempName\)|\$\d";
+        const string KnownReplacements = @"\$\(Output(\[\d\])?\)|\$\(Input(\[\d\])\)|\$\(Name\)|\$\(TempName\)|\$\(TempDir\)|\$\d";
 
         string fileName;
         string arguments;
@@ -93,8 +93,11 @@ namespace Ampere
                 if (type == 'N')
                     return instance.OutputName;
 
-                if (type == 'T')
+                if (match.Value.Contains("TempName"))
                     return instance.Env.ResolveTemp(instance.OutputName);
+
+                if (match.Value.Contains("TempDir"))
+                    return instance.Env.TempPath;
 
                 if (type == 'I')
                 {

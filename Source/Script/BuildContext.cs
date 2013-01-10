@@ -35,7 +35,7 @@ namespace Ampere
             private set;
         }
 
-        public IList<string> ProbedPaths
+        public ConcurrentBag<string> ProbedPaths
         {
             get;
             private set;
@@ -52,7 +52,7 @@ namespace Ampere
             Env = new BuildEnvironment(this);
             Log = LogManager.GetLogger("Build");
             history = new BuildHistory(historyPath);
-            ProbedPaths = new List<string>();
+            ProbedPaths = new ConcurrentBag<string>();
             this.fullRebuild = fullRebuild;
         }
 
@@ -147,10 +147,7 @@ namespace Ampere
             var inputNode = currentStage as InputNode;
 
             if (!inputNode.ResolveNames(instance) || !rule.ResolveNames(instance))
-            {
-                Log.ErrorFormat("FAILED! Build for '{0}'", name);
-                return null;
-            }
+                return BuildFailed(name, instance);
 
             // check to see if we even need to do this build
             if (!fullRebuild && !history.ShouldBuild(instance))
@@ -170,18 +167,14 @@ namespace Ampere
                     if (instance.IsTempBuild && currentStage is OutputNode)
                         return instance;
 
-                    history.BuildFailed(instance);
-                    return null;
+                    return BuildFailed(name, instance);
                 }
 
                 currentStage = currentStage.OutputNode;
             }
 
             if (instance.TempBuildFailed)
-            {
-                history.BuildFailed(instance);
-                return null;
-            }
+                return BuildFailed(name, instance);
 
             history.BuildSucceeded(instance);
             builtAssets.Add(instance.OutputName);
@@ -190,6 +183,13 @@ namespace Ampere
 
             Log.InfoFormat("Build for '{0}' successful.", name);
             return instance;
+        }
+
+        BuildInstance BuildFailed(string name, BuildInstance instance)
+        {
+            history.BuildFailed(instance);
+            Log.ErrorFormat("FAILED! Build for '{0}'", name);
+            return null;
         }
     }
 }

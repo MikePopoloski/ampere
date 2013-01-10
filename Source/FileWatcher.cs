@@ -27,7 +27,7 @@ namespace Ampere
             if (!Directory.Exists(path))
                 return;
 
-            watchers.Add(new FileSystemWatcher(path, filter));
+            watchers.Add(new FileSystemWatcher(path, filter) { IncludeSubdirectories = true });
             filters.Add(filter);
         }
 
