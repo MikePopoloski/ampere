@@ -15,7 +15,9 @@ namespace Ampere
         public DirectoryCache(BuildContext context, string directory)
         {
             this.context = context;
-            files = Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories).ToLookup(f => Path.GetFileName(f));
+            files = Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
+                .Select(f => f.Remove(0, directory.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+                .ToLookup(f => Path.GetFileName(f));
         }
 
         public string GetPath(string name)
