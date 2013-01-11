@@ -18,7 +18,7 @@ namespace Ampere
         {
             level = Clamp(level, 0, 3);
 
-            var appender = new ColoredConsoleAppender();
+            var appender = new ConsoleAppender();
             appender.Layout = new PatternLayout(logLayout);
             appender.Threshold = LogLevels[level];
             appender.ActivateOptions();
