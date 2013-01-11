@@ -1,0 +1,5 @@
+<Test>
+	<Dependencies>
+		<Stuff Name="foo.asset" />
+	</Dependencies>
+</Test>
