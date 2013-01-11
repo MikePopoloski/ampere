@@ -17,7 +17,7 @@ namespace Ampere
             this.context = context;
             files = Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
                 .Select(f => f.Remove(0, directory.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
-                .ToLookup(f => Path.GetFileName(f));
+                .ToLookup(f => Path.GetFileName(f), StringComparer.CurrentCultureIgnoreCase);
         }
 
         public string GetPath(string name)
