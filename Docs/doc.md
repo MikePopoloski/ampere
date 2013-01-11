@@ -20,8 +20,11 @@ The tool has the following command line options:
 `build-script`: an optional path to the C# build script.
 
 If an explicit build script is not provided, the tool will search using the following steps:
+
 1. \<current directory name\>.cs
+
 2. build.cs in the current directory
+
 3. Otherwise, error.
 
 ### Build Script
