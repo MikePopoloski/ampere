@@ -93,9 +93,13 @@ The `inputs` parameter is a sequence of all the inputs from the previous pipelin
 
 ### BuildInstance
 The `BuildInstance` type passed to each processor encapsulates information about the currently executing build. The processor may make use of it in any way it needs. Some of the more useful methods are:
+
 ```void Log(LogLevel level, string message, params object[] args);``` - Logs information to the screen, such as errors or general build information.
+
 ```Env``` - Property that gives access to the captured environment at the time the build was started. This is necessarily a copy since the global environment can be changed after the build has started asynchronously.
+
 ```Task Start(string name);``` - Kicks off a new build using the given asset name. You can use the returned `Task` if you want to wait for that build to finish.
+
 ```BuildInstance StartTemp(string name);``` - Kicks off a *temporary* build. A temporary build is one that does not output to disk, but instead executes synchronously with respect to the current build and returns the results via the `Result` property on the returned `BuildInstance`. This is useful for embedding another asset within your own output, such as embedding a compiled shader binary inside your material asset.
 
 ### Change Detection
