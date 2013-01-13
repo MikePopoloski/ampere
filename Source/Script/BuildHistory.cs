@@ -38,6 +38,7 @@ namespace Ampere
         public List<FileEntry> OutputCache;
         public List<FileEntry> InputCache;
         public List<string> StageHashes;
+        public List<string> Dependencies;
         public List<TempEntry> TempDependencies;
 
         public HistoryEntry()
@@ -47,6 +48,7 @@ namespace Ampere
             OutputCache = new List<FileEntry>();
             InputCache = new List<FileEntry>();
             StageHashes = new List<string>();
+            Dependencies = new List<string>();
             TempDependencies = new List<TempEntry>();
         }
     }
@@ -60,9 +62,11 @@ namespace Ampere
 
         string path;
         ConcurrentDictionary<string, HistoryEntry> history;
+        BuildContext context;
 
-        public BuildHistory(string historyPath)
+        public BuildHistory(BuildContext context, string historyPath)
         {
+            this.context = context;
             path = historyPath;
             if (File.Exists(historyPath))
                 history = JsonConvert.DeserializeObject<ConcurrentDictionary<string, HistoryEntry>>(File.ReadAllText(historyPath));
@@ -76,7 +80,7 @@ namespace Ampere
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
-            File.WriteAllText(path, JsonConvert.SerializeObject(history));
+            File.WriteAllText(path, JsonConvert.SerializeObject(history, Formatting.Indented));
         }
 
         public void BuildSucceeded(BuildInstance instance)
@@ -103,6 +107,9 @@ namespace Ampere
             foreach (var output in instance.Byproducts)
                 entry.OutputCache.Add(CreateFileEntry(output, hashOutputs));
 
+            // add dependent builds
+            entry.Dependencies.AddRange(instance.Dependencies);
+
             // create entries for each dependent temp build
             foreach (var build in instance.TempBuilds)
                 entry.TempDependencies.Add(CreateTempEntry(build));
@@ -125,12 +132,23 @@ namespace Ampere
             if (!history.TryGetValue(instance.OutputName.ToLower(), out entry))
                 return true;
 
-            // check 2: make sure the byproducts match
+            // check 2: check dependencies
+            foreach (var dependency in entry.Dependencies)
+            {
+                var dependentBuild = context.CreateBuildInstance(dependency);
+                if (dependentBuild == null)
+                    return true;
+
+                if (ShouldBuild(dependentBuild))
+                    return true;
+            }
+
+            // check 3: make sure the byproducts match
             var byproductSet = instance.Byproducts.Select(b => b.ToLower()).ToSet();
             if (!byproductSet.SetEquals(entry.Byproducts))
                 return true;
 
-            // check 3: compare number and type of pipeline stages
+            // check 4: compare number and type of pipeline stages
             var node = instance.Pipeline;
             for (int i = 0; i < entry.StageTypes.Count; i++)
             {
@@ -144,7 +162,7 @@ namespace Ampere
             if (node != null)
                 return true;
 
-            // check 4: check for pipeline processor changes
+            // check 5: check for pipeline processor changes
             node = instance.Pipeline;
             foreach (var stage in entry.StageHashes)
             {
@@ -154,7 +172,7 @@ namespace Ampere
                 node = node.InputNode;
             }
 
-            // check 5: changes in inputs
+            // check 6: changes in inputs
             if (instance.Env.InputChangeDetection != ChangeDetection.None)
             {
                 for (int i = 0; i < instance.Inputs.Length; i++)
@@ -164,7 +182,7 @@ namespace Ampere
                 }
             }
 
-            // check 6: changes in outputs
+            // check 7: changes in outputs
             if (instance.Env.OutputChangeDetection != ChangeDetection.None)
             {
                 if (CheckChanged(instance.Env.OutputChangeDetection, new FileInfo(instance.OutputPath), entry.OutputCache[0]))
@@ -177,7 +195,7 @@ namespace Ampere
                 }
             }
 
-            // check 7: look at any dependent temp builds and see if they have been changed
+            // check 8: look at any dependent temp builds and see if they have been changed
             if (instance.Env.InputChangeDetection != ChangeDetection.None)
             {
                 if (entry.TempDependencies.Any(t => TempInputsHaveChanged(t, instance.Env.InputChangeDetection)))

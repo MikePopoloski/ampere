@@ -31,6 +31,12 @@ namespace Ampere
             private set;
         }
 
+        internal List<string> Dependencies
+        {
+            get;
+            private set;
+        }
+
         public BuildEnvironment Env
         {
             get;
@@ -94,6 +100,7 @@ namespace Ampere
 
             this.context = context;
             TempBuilds = new List<BuildInstance>();
+            Dependencies = new List<string>();
         }
 
         public void Log(LogLevel level, string message, params object[] args)
@@ -120,6 +127,7 @@ namespace Ampere
 
         public Task Start(string name)
         {
+            Dependencies.Add(name);
             return context.Start(name);
         }
 
