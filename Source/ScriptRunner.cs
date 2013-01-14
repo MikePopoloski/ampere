@@ -3,6 +3,7 @@ using Roslyn.Compilers;
 using Roslyn.Scripting.CSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -59,6 +60,7 @@ namespace Ampere
             session.AddReference(typeof(BuildContext).Assembly);
             session.AddReference(typeof(Enumerable).Assembly);
             session.AddReference(typeof(HashSet<>).Assembly);
+            session.AddReference(typeof(ISet<>).Assembly);
 
             var code = File.ReadAllText(scriptPath);
             var buildResults = new BuildResults();

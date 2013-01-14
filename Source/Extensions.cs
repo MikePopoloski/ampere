@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Ampere
 {
-    static class Extensions
+    public static class Extensions
     {
         /// <summary>
         /// Removes the specified key from the dictionary.

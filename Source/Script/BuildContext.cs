@@ -20,8 +20,8 @@ namespace Ampere
         List<OutputNode> rules = new List<OutputNode>();
         ConcurrentDictionary<string, Lazy<Task<BuildInstance>>> runningBuilds = new ConcurrentDictionary<string, Lazy<Task<BuildInstance>>>();
         ConcurrentBag<string> builtAssets = new ConcurrentBag<string>();
+        ConcurrentBag<string> allAssets = new ConcurrentBag<string>();
         string connectionInfo;
-        bool fullRebuild;
 
         public BuildEnvironment Env
         {
@@ -47,13 +47,24 @@ namespace Ampere
             private set;
         }
 
+        public bool FullRebuild
+        {
+            get;
+            set;
+        }
+
+        public IEnumerable<string> AllAssets
+        {
+            get { return allAssets.ToSet(); }
+        }
+
         public BuildContext(string historyPath, bool fullRebuild)
         {
             Env = new BuildEnvironment(this);
             Log = LogManager.GetLogger("Build");
             history = new BuildHistory(this, historyPath);
             ProbedPaths = new ConcurrentBag<string>();
-            this.fullRebuild = fullRebuild;
+            FullRebuild = fullRebuild;
         }
 
         public DirectoryCache CreateDirectoryCache(string directory)
@@ -176,8 +187,12 @@ namespace Ampere
                 return BuildFailed(name, instance);
 
             // check to see if we even need to do this build
-            if (!fullRebuild && !history.ShouldBuild(instance))
+            if (!FullRebuild && !history.ShouldBuild(instance))
             {
+                allAssets.Add(name);
+                foreach (var entry in history.GetDependencies(instance.OutputName))
+                    allAssets.Add(entry);
+
                 Log.InfoFormat("Skipping '{0}' (up-to-date).", name);
                 return null;
             }
@@ -204,8 +219,12 @@ namespace Ampere
 
             history.BuildSucceeded(instance);
             builtAssets.Add(instance.OutputName);
+            allAssets.Add(instance.OutputName);
             foreach (var byproduct in instance.Byproducts)
+            {
+                allAssets.Add(byproduct);
                 builtAssets.Add(byproduct);
+            }
 
             Log.InfoFormat("Build for '{0}' successful.", name);
             return instance;

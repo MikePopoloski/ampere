@@ -83,6 +83,15 @@ namespace Ampere
             File.WriteAllText(path, JsonConvert.SerializeObject(history, Formatting.Indented));
         }
 
+        public IEnumerable<string> GetDependencies(string name)
+        {
+            HistoryEntry entry;
+            if (!history.TryGetValue(name.ToLower(), out entry))
+                return Enumerable.Empty<string>();
+
+            return entry.Dependencies;
+        }
+
         public void BuildSucceeded(BuildInstance instance)
         {
             // build succeeded; create/update the history entry
