@@ -20,6 +20,21 @@ namespace Ampere
             Processor = processor;
         }
 
+        public ProcessorNode(Func<BuildInstance, Stream, Stream> processor)
+        {
+            Processor = (instance, inputs) =>
+            {
+                var stream = inputs.FirstOrDefault() as Stream;
+                if (stream == null)
+                {
+                    instance.Log(LogLevel.Error, "Inputs to processor must be a single Stream object.");
+                    return null;
+                }
+
+                return new[] { processor(instance, stream) };
+            };
+        }
+
         public ProcessorNode(Func<BuildInstance, IEnumerable<object>, object> processor)
             : this((i, s) => new[] { processor(i, s) })
         {

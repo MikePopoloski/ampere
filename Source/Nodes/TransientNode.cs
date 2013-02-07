@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,14 @@ namespace Ampere
         }
 
         public TransientNode Using(Func<BuildInstance, IEnumerable<object>, object> processor)
+        {
+            var node = new ProcessorNode(processor) { OutputNode = this };
+            InputNode = node;
+
+            return node;
+        }
+
+        public TransientNode Using(Func<BuildInstance, Stream, Stream> processor)
         {
             var node = new ProcessorNode(processor) { OutputNode = this };
             InputNode = node;
