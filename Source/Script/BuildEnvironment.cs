@@ -89,17 +89,6 @@ namespace Ampere
 
         public string ResolveOutput(string name)
         {
-            if (!Directory.Exists(OutputPath))
-            {
-                if (CreateOutputDirectory)
-                    Directory.CreateDirectory(OutputPath);
-                else
-                {
-                    Context.Log.ErrorFormat("Current output path '{0}' does not exist.", OutputPath);
-                    return null;
-                }
-            }
-
             if (OutputResolver == null)
             {
                 Context.Log.ErrorFormat("No output resolver function set.");
@@ -111,8 +100,17 @@ namespace Ampere
                 return null;
 
             var path = Path.Combine(OutputPath, output);
-            Context.ProbedPaths.Add(Path.GetDirectoryName(path));
+            var directory = Path.GetDirectoryName(path);
+            if (CreateOutputDirectory)
+                Directory.CreateDirectory(directory);
 
+            if (!Directory.Exists(directory))
+            {
+                Context.Log.ErrorFormat("Current output path '{0}' does not exist.", directory);
+                return null;
+            }
+
+            Context.ProbedPaths.Add(directory);
             return path;
         }
 
