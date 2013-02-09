@@ -125,7 +125,7 @@ namespace Ampere
             }
         }
 
-        public Task Start(string name)
+        public Task<BuildInstance> Start(string name)
         {
             Dependencies.Add(name);
             return context.Start(name);
