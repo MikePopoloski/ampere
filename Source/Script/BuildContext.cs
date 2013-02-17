@@ -194,7 +194,8 @@ namespace Ampere
                     allAssets.Add(entry);
 
                 Log.InfoFormat("Skipping '{0}' (up-to-date).", name);
-                return null;
+                instance.Status = BuildStatus.Skipped;
+                return instance;
             }
 
             // run the pipeline
@@ -214,7 +215,7 @@ namespace Ampere
                 currentStage = currentStage.OutputNode;
             }
 
-            if (instance.TempBuildFailed)
+            if (instance.Status == BuildStatus.Failed)
                 return BuildFailed(name, instance);
 
             history.BuildSucceeded(instance);
@@ -227,6 +228,7 @@ namespace Ampere
             }
 
             Log.InfoFormat("Build for '{0}' successful.", name);
+            instance.Status = BuildStatus.Succeeded;
             return instance;
         }
 
@@ -234,7 +236,8 @@ namespace Ampere
         {
             history.BuildFailed(instance);
             Log.ErrorFormat("FAILED! Build for '{0}'", name);
-            return null;
+            instance.Status = BuildStatus.Failed;
+            return instance;
         }
     }
 }

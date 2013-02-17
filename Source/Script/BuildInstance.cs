@@ -15,15 +15,17 @@ namespace Ampere
         Error
     }
 
+    public enum BuildStatus
+    {
+        Pending,
+        Succeeded,
+        Skipped,
+        Failed
+    }
+
     public class BuildInstance
     {
         BuildContext context;
-
-        internal bool TempBuildFailed
-        {
-            get;
-            private set;
-        }
 
         internal List<BuildInstance> TempBuilds
         {
@@ -85,6 +87,12 @@ namespace Ampere
             internal set;
         }
 
+        public BuildStatus Status
+        {
+            get;
+            internal set;
+        }
+
         public string OutputName
         {
             get { return Match.Value; }
@@ -97,6 +105,7 @@ namespace Ampere
             Pipeline = pipeline;
             Byproducts = pipeline.Byproducts;
             IsTempBuild = tempBuild;
+            Status = BuildStatus.Pending;
 
             this.context = context;
             TempBuilds = new List<BuildInstance>();
@@ -138,8 +147,8 @@ namespace Ampere
                 return null;
             
             var result = task.Result;
-            if (result == null)
-                TempBuildFailed = true;
+            if (result == null || result.Status == BuildStatus.Failed)
+                Status = BuildStatus.Failed;
             else
                 TempBuilds.Add(result);
 
