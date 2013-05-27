@@ -35,11 +35,11 @@ namespace Ampere
             string scriptPath = buildScript;
             if (string.IsNullOrEmpty(scriptPath) || !File.Exists(scriptPath))
             {
-                var file = Path.GetDirectoryName(Directory.GetCurrentDirectory()) + ".cs";
+                var file = Path.GetDirectoryName(Directory.GetCurrentDirectory()) + ".csx";
                 if (File.Exists(file))
                     scriptPath = file;
-                else if (File.Exists("build.cs"))
-                    scriptPath = "build.cs";
+                else if (File.Exists("build.csx"))
+                    scriptPath = "build.csx";
                 else
                 {
                     log.Error("Could not find or open build script.");

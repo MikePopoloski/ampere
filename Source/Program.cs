@@ -75,10 +75,10 @@ namespace Ampere
         static void WaitForChanges(Options options, BuildResults results)
         {
             Watcher.Clear();
-            Watcher.Add(StartupPath, "*.cs");
+            Watcher.Add(StartupPath, "*.csx");
 
             if (!string.IsNullOrEmpty(options.BuildScript))
-                Watcher.Add(Path.GetDirectoryName(Path.GetFullPath(options.BuildScript)), "*.cs");
+                Watcher.Add(Path.GetDirectoryName(Path.GetFullPath(options.BuildScript)), "*.csx");
 
             if (results != null)
             {
@@ -115,7 +115,7 @@ namespace Ampere
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(string.Format("Ampere.Embedded.{0}.dll", name.Name));
             if (stream == null)
                 return Assembly.LoadFrom(name.Name + ".dll");
-            
+
             var block = new byte[stream.Length];
             stream.Read(block, 0, block.Length);
             stream.Close();
