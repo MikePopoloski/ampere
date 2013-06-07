@@ -141,17 +141,6 @@ namespace Ampere
             if (!history.TryGetValue(instance.OutputName.ToLower(), out entry))
                 return true;
 
-            // check 2: check dependencies
-            foreach (var dependency in entry.Dependencies)
-            {
-                var dependentBuild = context.CreateBuildInstance(dependency);
-                if (dependentBuild == null)
-                    return true;
-
-                if (ShouldBuild(dependentBuild))
-                    return true;
-            }
-
             // check 3: make sure the byproducts match
             var byproductSet = instance.Byproducts.Select(b => b.ToLower()).ToSet();
             if (!byproductSet.SetEquals(entry.Byproducts))
@@ -212,6 +201,10 @@ namespace Ampere
             }
 
             // at this point, we can safely say that the entire pipeline is the same. no need to do a build
+            // however, some of our dependencies may have changed, so let them sort themselves out
+            foreach (var dependency in entry.Dependencies)
+                context.Start(dependency);
+
             return false;
         }
 

@@ -103,6 +103,8 @@ namespace Ampere
 
             buildResults.ShouldRunAgain = context.ShouldRunAgain;
             buildResults.ProbedPaths = context.ProbedPaths.Select(p => Path.GetFullPath(p)).ToList();
+            buildResults.LoadedPlugins = context.Env.ReferencePaths.Select(t => Path.GetFullPath(t.Item1)).ToList();
+
             return buildResults;
         }
 

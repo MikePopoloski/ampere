@@ -117,32 +117,6 @@ namespace Ampere
                 Notifier.Notify(connectionInfo, builtAssets.ToList());
         }
 
-        // used by the build history to create a temporary build instance to check whether dependent builds should run
-        internal BuildInstance CreateBuildInstance(string name)
-        {
-            // find best applicable rule
-            var best = rules
-                .Select(r => new { Node = r, Match = r.Match(name) })
-                .Where(m => m.Match.Success)
-                .GroupBy(m => m.Node.Priority)
-                .OrderBy(g => g.Key)
-                .FirstOrDefault();
-
-            if (best == null)
-                return null;
-
-            var chosen = best.First();
-            var node = chosen.Node;
-            var instance = new BuildInstance(this, chosen.Match, node, false);
-            var currentStage = node.GetBottomNode();
-            var inputNode = currentStage as InputNode;
-
-            if (!inputNode.ResolveNames(instance) || !node.ResolveNames(instance))
-                return null;
-
-            return instance;
-        }
-
         public Task<BuildInstance> Start(string name, bool tempBuild = false)
         {
             // find best applicable rule
@@ -207,7 +181,16 @@ namespace Ampere
             while (currentStage != null)
             {
                 // run the current stage, saving the results and passing them on to the next stage in the pipeline
-                state = currentStage.Evaluate(instance, state);
+                try
+                {
+                    state = currentStage.Evaluate(instance, state);
+                }
+                catch (Exception e)
+                {
+                    Log.ErrorFormat("Exception thrown while building '{0}': {1}", name, e);
+                    return BuildFailed(name, instance);
+                }
+
                 if (state == null)
                 {
                     if (instance.IsTempBuild && currentStage is OutputNode)
