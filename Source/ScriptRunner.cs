@@ -26,6 +26,9 @@ namespace Ampere
 
         public BuildResults Run(string buildScript, int logLevel, bool fullRebuild)
         {
+            var context = new BuildContext();
+            AppDomain.CurrentDomain.AssemblyResolve += (o, e) => Resolver(context, e);
+
             // initialize the logging system
             Logging.Initialize("%thread> %level - %message%newline", logLevel);
 
@@ -35,11 +38,15 @@ namespace Ampere
             string scriptPath = buildScript;
             if (string.IsNullOrEmpty(scriptPath) || !File.Exists(scriptPath))
             {
-                var file = Path.GetDirectoryName(Directory.GetCurrentDirectory()) + ".csx";
-                if (File.Exists(file))
-                    scriptPath = file;
+                var file = Path.GetDirectoryName(Directory.GetCurrentDirectory());
+                if (File.Exists(file + ".csx"))
+                    scriptPath = file + ".csx";
+                else if (File.Exists(file + ".cs"))
+                    scriptPath = file + ".cs";
                 else if (File.Exists("build.csx"))
                     scriptPath = "build.csx";
+                else if (File.Exists("build.cs"))
+                    scriptPath = "build.cs";
                 else
                 {
                     log.Error("Could not find or open build script.");
@@ -52,7 +59,7 @@ namespace Ampere
 
             // create the script engine
             string historyPath = Path.Combine(DataDirectory, Murmur.Hash(scriptPath, 144) + "_history.dat");
-            var context = new BuildContext(historyPath, fullRebuild);
+            context.Initialize(historyPath, fullRebuild);
             var scriptEngine = new ScriptEngine();
             var session = scriptEngine.CreateSession(context);
 
@@ -97,6 +104,48 @@ namespace Ampere
             buildResults.ShouldRunAgain = context.ShouldRunAgain;
             buildResults.ProbedPaths = context.ProbedPaths.Select(p => Path.GetFullPath(p)).ToList();
             return buildResults;
+        }
+
+        public static Assembly Resolver(BuildContext context, ResolveEventArgs args)
+        {
+            var name = new AssemblyName(args.Name);
+            if (name.Name.Contains(".resources"))   // hack to avoid trying to satisfy resource requests
+                return null;
+
+            // try to load one of the embedded assemblies
+            var dllName = name.Name + ".dll";
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Ampere.Embedded." + dllName);
+            if (stream != null)
+            {
+                var block = new byte[stream.Length];
+                stream.Read(block, 0, block.Length);
+                stream.Close();
+
+                return Assembly.Load(block);
+            }
+
+            // otherwise, try the extra probing paths from the script environment
+            if (context != null)
+            {
+                foreach (var pair in context.Env.ReferencePaths)
+                {
+                    if (pair.Item2)
+                    {
+                        var results = Directory.GetFiles(pair.Item1, dllName, SearchOption.AllDirectories);
+                        if (results.Length == 1)
+                            return Assembly.LoadFrom(results[0]);
+                    }
+                    else
+                    {
+                        var dllPath = Path.Combine(pair.Item1, dllName);
+                        if (File.Exists(dllPath))
+                            return Assembly.LoadFrom(dllPath);
+                    }
+                }
+            }
+
+            // otherwise, defer to the default loader
+            return Assembly.LoadFrom(dllName);
         }
     }
 }

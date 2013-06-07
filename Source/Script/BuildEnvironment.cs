@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 namespace Ampere
 {
@@ -21,6 +22,7 @@ namespace Ampere
     /// </summary>
     public class BuildEnvironment
     {
+        List<Tuple<string, bool>> referencePaths = new List<Tuple<string, bool>>();
         string inputPath;
 
         public BuildContext Context
@@ -54,6 +56,11 @@ namespace Ampere
         public bool CreateOutputDirectory { get; set; }
         public bool WriteTempBuilds { get; set; }
 
+        internal IEnumerable<Tuple<string, bool>> ReferencePaths
+        {
+            get { return referencePaths; }
+        }
+
         public BuildEnvironment(BuildContext context)
         {
             Context = context;
@@ -64,6 +71,11 @@ namespace Ampere
 
             InputResolver = Resolvers.PassThrough();
             OutputResolver = Resolvers.PassThrough();
+        }
+
+        public void AddReferencePath(string path, bool recurse = false)
+        {
+            referencePaths.Add(Tuple.Create(path, recurse));
         }
 
         public string ResolveInput(string name)

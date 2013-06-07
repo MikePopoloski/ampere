@@ -58,12 +58,16 @@ namespace Ampere
             get { return allAssets.ToSet(); }
         }
 
-        public BuildContext(string historyPath, bool fullRebuild)
+        public BuildContext()
         {
             Env = new BuildEnvironment(this);
+            ProbedPaths = new ConcurrentBag<string>();
+        }
+
+        public void Initialize(string historyPath, bool fullRebuild)
+        {
             Log = LogManager.GetLogger("Build");
             history = new BuildHistory(this, historyPath);
-            ProbedPaths = new ConcurrentBag<string>();
             FullRebuild = fullRebuild;
         }
 
