@@ -8,6 +8,8 @@ namespace Ampere
 {
     public class BuildLog
     {
+        object sync = new object();
+
         public bool Verbose
         {
             get;
@@ -16,16 +18,12 @@ namespace Ampere
 
         public void Error(string format, params object[] args)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("[error] " + format, args);
-            Console.ResetColor();
+            Write(ConsoleColor.Red, "[error] " + format, args);
         }
 
         public void Warning(string format, params object[] args)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("[warning] " + format, args);
-            Console.ResetColor();
+            Write(ConsoleColor.Yellow, "[warning] " + format, args);
         }
 
         public void Info(string format, params object[] args)
@@ -33,24 +31,29 @@ namespace Ampere
             if (!Verbose)
                 return;
 
-            Console.WriteLine(format, args);
+            Write(null, format, args);
+        }
+
+        public void Write(string format, params object[] args)
+        {
+            Write(null, format, args);
         }
 
         internal void Write(ConsoleColor? color, string format, params object[] args)
         {
-            if (color != null)
+            lock (sync)
             {
-                Console.ForegroundColor = color.Value;
-                Console.WriteLine(format, args);
-                Console.ResetColor();
+                if (color != null)
+                {
+                    Console.ForegroundColor = color.Value;
+                    Console.WriteLine(format, args);
+                    Console.ResetColor();
+                }
+                else
+                    Console.WriteLine(format, args);
             }
-            else
-                Console.WriteLine(format, args);
         }
 
-        internal void Write(string format, params object[] args)
-        {
-            Console.WriteLine(format, args);
-        }
+
     }
 }

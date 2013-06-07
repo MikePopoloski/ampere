@@ -230,7 +230,7 @@ namespace Ampere
                 builtAssets.Add(byproduct);
             }
 
-            Log.Info("Build for '{0}' successful.", name);
+            Log.Write("Build for '{0}' successful.", name);
             instance.Status = BuildStatus.Succeeded;
             Interlocked.Increment(ref Stats.Succeeded);
             return instance;
