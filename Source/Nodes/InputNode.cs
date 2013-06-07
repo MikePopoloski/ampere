@@ -46,7 +46,15 @@ namespace Ampere
         public override IEnumerable<object> Evaluate(BuildInstance instance, IEnumerable<object> unused)
         {
             // open up the filestreams
-            return instance.Inputs.Select(p => File.OpenRead(p));
+            try
+            {
+                return instance.Inputs.Select(p => File.OpenRead(p)).ToArray();
+            }
+            catch (IOException e)
+            {
+                instance.Log.Error(e.Message);
+                return null;
+            }
         }
     }
 }
