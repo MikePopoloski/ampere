@@ -73,9 +73,9 @@ namespace Ampere
             OutputResolver = Resolvers.PassThrough();
         }
 
-        public void AddReferencePath(string path, bool recurse = false)
+        public void AddReferencePath(string path, bool recursive = false)
         {
-            referencePaths.Add(Tuple.Create(path, recurse));
+            referencePaths.Add(Tuple.Create(path, recursive));
         }
 
         public string ResolveInput(string name)

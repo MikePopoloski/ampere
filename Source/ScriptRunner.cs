@@ -145,7 +145,7 @@ namespace Ampere
             }
 
             // otherwise, defer to the default loader
-            return Assembly.LoadFrom(dllName);
+            return null;
         }
     }
 }
