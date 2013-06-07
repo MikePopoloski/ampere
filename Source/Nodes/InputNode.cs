@@ -32,7 +32,7 @@ namespace Ampere
                 var path = instance.Env.ResolveInput(fullName);
                 if (string.IsNullOrEmpty(path))
                 {
-                    instance.Log(LogLevel.Error, "Could not resolve input '{0}' (line {1}).", fullName, LineNumber);
+                    instance.Log.Error("Could not resolve input '{0}' (line {1}).", fullName, LineNumber);
                     return false;
                 }
 

@@ -6,8 +6,8 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
-using log4net;
 
 namespace Ampere
 {
@@ -16,6 +16,13 @@ namespace Ampere
     /// </summary>
     public class BuildContext
     {
+        public class BuildStats
+        {
+            public int Failed;
+            public int Succeeded;
+            public int Skipped;
+        }
+
         BuildHistory history;
         List<OutputNode> rules = new List<OutputNode>();
         ConcurrentDictionary<string, Lazy<Task<BuildInstance>>> runningBuilds = new ConcurrentDictionary<string, Lazy<Task<BuildInstance>>>();
@@ -29,7 +36,7 @@ namespace Ampere
             private set;
         }
 
-        public ILog Log
+        public BuildLog Log
         {
             get;
             private set;
@@ -53,6 +60,12 @@ namespace Ampere
             set;
         }
 
+        public BuildStats Stats
+        {
+            get;
+            private set;
+        }
+
         public IEnumerable<string> AllAssets
         {
             get { return allAssets.ToSet(); }
@@ -60,13 +73,14 @@ namespace Ampere
 
         public BuildContext()
         {
+            Stats = new BuildStats();
             Env = new BuildEnvironment(this);
             ProbedPaths = new ConcurrentBag<string>();
         }
 
-        public void Initialize(string historyPath, bool fullRebuild)
+        public void Initialize(string historyPath, bool fullRebuild, BuildLog log)
         {
-            Log = LogManager.GetLogger("Build");
+            Log = log;
             history = new BuildHistory(this, historyPath);
             FullRebuild = fullRebuild;
         }
@@ -129,11 +143,12 @@ namespace Ampere
 
             if (best == null)
             {
-                Log.ErrorFormat("No applicable rule found for asset '{0}'.", name);
+                Log.Error("No applicable rule found for asset '{0}'.", name);
+                Interlocked.Increment(ref Stats.Failed);
                 return null;
             }
             else if (best.Count() != 1)
-                Log.WarnFormat("More than one rule with the same priority matches asset '{0}' (rules on lines: {1})", name, string.Join(", ", best.Select(b => b.Node.LineNumber)));
+                Log.Warning("More than one rule with the same priority matches asset '{0}' (rules on lines: {1})", name, string.Join(", ", best.Select(b => b.Node.LineNumber)));
 
             // we've found the rule we will use. queue up the task to build the asset, or return the current one if it's already being built
             var chosen = best.First();
@@ -171,8 +186,9 @@ namespace Ampere
                 foreach (var entry in history.GetDependencies(instance.OutputName))
                     allAssets.Add(entry);
 
-                Log.InfoFormat("Skipping '{0}' (up-to-date).", name);
+                Log.Info("Skipping '{0}' (up-to-date).", name);
                 instance.Status = BuildStatus.Skipped;
+                Interlocked.Increment(ref Stats.Skipped);
                 return instance;
             }
 
@@ -187,7 +203,7 @@ namespace Ampere
                 }
                 catch (Exception e)
                 {
-                    Log.ErrorFormat("Exception thrown while building '{0}': {1}", name, e);
+                    Log.Error("Exception thrown while building '{0}': {1}", name, e);
                     return BuildFailed(name, instance);
                 }
 
@@ -214,16 +230,18 @@ namespace Ampere
                 builtAssets.Add(byproduct);
             }
 
-            Log.InfoFormat("Build for '{0}' successful.", name);
+            Log.Info("Build for '{0}' successful.", name);
             instance.Status = BuildStatus.Succeeded;
+            Interlocked.Increment(ref Stats.Succeeded);
             return instance;
         }
 
         BuildInstance BuildFailed(string name, BuildInstance instance)
         {
             history.BuildFailed(instance);
-            Log.ErrorFormat("FAILED! Build for '{0}'", name);
+            Log.Error("FAILED! Build for '{0}'", name);
             instance.Status = BuildStatus.Failed;
+            Interlocked.Increment(ref Stats.Failed);
             return instance;
         }
     }

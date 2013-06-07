@@ -56,7 +56,7 @@ namespace Ampere
 
                 if (string.IsNullOrEmpty(outputPath))
                 {
-                    instance.Log(LogLevel.Error, "Could not resolve output '{0}' (line {1}).", output, LineNumber);
+                    instance.Log.Error("Could not resolve output '{0}' (line {1}).", output, LineNumber);
                     return false;
                 }
 
@@ -80,7 +80,7 @@ namespace Ampere
             var inputArray = inputs.ToArray();
             if (inputArray.Length != outputs.Count)
             {
-                instance.Log(LogLevel.Error, "Number of inputs does not match number of outputs for '{0}' (line {1}).", instance.OutputName, LineNumber);
+                instance.Log.Error("Number of inputs does not match number of outputs for '{0}' (line {1}).", instance.OutputName, LineNumber);
                 return null;
             }
 
@@ -99,7 +99,7 @@ namespace Ampere
                     File.Copy(file.Name, outputPath, true);
                 else if (stream == null)
                 {
-                    instance.Log(LogLevel.Error, "Inputs to Build() node must all be of type stream ('{0}' on line {1}).", instance.OutputName, LineNumber);
+                    instance.Log.Error("Inputs to Build() node must all be of type stream ('{0}' on line {1}).", instance.OutputName, LineNumber);
                     return null;
                 }
                 else

@@ -1,5 +1,4 @@
-﻿using log4net;
-using Roslyn.Compilers;
+﻿using Roslyn.Compilers;
 using Roslyn.Scripting.CSharp;
 using System;
 using System.Collections.Generic;
@@ -29,10 +28,7 @@ namespace Ampere
             var context = new BuildContext();
             AppDomain.CurrentDomain.AssemblyResolve += (o, e) => Resolver(context, e);
 
-            // initialize the logging system
-            Logging.Initialize("%thread> %level - %message%newline", logLevel);
-
-            var log = LogManager.GetLogger("main");
+            var log = new BuildLog();
 
             // if we weren't given a build script, try to find one in the current directory
             string scriptPath = buildScript;
@@ -59,7 +55,7 @@ namespace Ampere
 
             // create the script engine
             string historyPath = Path.Combine(DataDirectory, Murmur.Hash(scriptPath, 144) + "_history.dat");
-            context.Initialize(historyPath, fullRebuild);
+            context.Initialize(historyPath, fullRebuild, log);
             var scriptEngine = new ScriptEngine();
             var session = scriptEngine.CreateSession(context);
 
@@ -81,21 +77,33 @@ namespace Ampere
             {
                 // run the script
                 var startTime = DateTime.Now;
-                log.InfoFormat("Running build script ({0})", scriptPath);
-                log.InfoFormat("Build started at {0}", startTime);
+                log.Write("Running build script ({0})", scriptPath);
+                log.Write("Build started at {0}", startTime);
+                log.Write("-----------------------------------------------");
+                log.Write("");
+
                 session.ExecuteFile(scriptPath);
 
                 context.WaitAll();
                 context.Finished();
 
-                log.InfoFormat("Build finished ({0:N2} seconds)", (DateTime.Now - startTime).TotalSeconds);
+                log.Write("");
+                log.Write("-----------------------------------------------");
+                log.Write("Build finished ({0:N2} seconds)", (DateTime.Now - startTime).TotalSeconds);
+                log.Write(
+                    context.Stats.Failed > 0 ? ConsoleColor.Red : (ConsoleColor?)null,
+                    "{0} succeeded, {1} failed, {2} up-to-date",
+                    context.Stats.Succeeded,
+                    context.Stats.Failed,
+                    context.Stats.Skipped
+                );
             }
             catch (CompilationErrorException e)
             {
                 foreach (var error in e.Diagnostics)
                 {
                     var position = error.Location.GetLineSpan(true);
-                    log.ErrorFormat("({0}) {1}", position.StartLinePosition, error.Info.GetMessage());
+                    log.Error("({0}) {1}", position.StartLinePosition, error.Info.GetMessage());
                 }
 
                 return null;

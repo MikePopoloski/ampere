@@ -27,7 +27,7 @@ namespace Ampere
                 var stream = inputs.FirstOrDefault() as Stream;
                 if (stream == null)
                 {
-                    instance.Log(LogLevel.Error, "Inputs to processor must be a single Stream object.");
+                    instance.Log.Error("Inputs to processor must be a single Stream object.");
                     return null;
                 }
 
@@ -48,7 +48,7 @@ namespace Ampere
             }
             catch (Exception e)
             {
-                instance.Log(LogLevel.Error, e.ToString());
+                instance.Log.Error(e.ToString());
                 return null;
             }
         }

@@ -30,7 +30,7 @@ namespace Ampere
         {
             if (!File.Exists(fileName))
             {
-                instance.Log(LogLevel.Error, "Could not find external program '{0}'. (line {1})", fileName, LineNumber);
+                instance.Log.Error("Could not find external program '{0}'. (line {1})", fileName, LineNumber);
                 return null;
             }
 
@@ -50,13 +50,13 @@ namespace Ampere
             process.OutputDataReceived += (o, e) =>
             {
                 if (!string.IsNullOrEmpty(e.Data))
-                    instance.Log(LogLevel.Info, e.Data);
+                    instance.Log.Info(e.Data);
             };
 
             process.ErrorDataReceived += (o, e) =>
             {
                 if (!string.IsNullOrEmpty(e.Data))
-                    instance.Log(LogLevel.Error, e.Data);
+                    instance.Log.Error(e.Data);
             };
 
             process.Start();
@@ -71,7 +71,7 @@ namespace Ampere
 
             if ((options & RunOptions.DontCheckResultCode) == 0 && process.ExitCode != 0)
             {
-                instance.Log(LogLevel.Error, "Running tool '{0}' failed with result code {1}. (line {2})", fileName, process.ExitCode, LineNumber);
+                instance.Log.Error("Running tool '{0}' failed with result code {1}. (line {2})", fileName, process.ExitCode, LineNumber);
                 return null;
             }
 
@@ -104,14 +104,14 @@ namespace Ampere
                     int index = GetIndex(match);
                     if (index < 0 || index >= inputs.Length)
                     {
-                        instance.Log(LogLevel.Error, "Index of Input ({0}) given to Run() is outside the bounds of available inputs ({1}). ('{2}' on line {3})", index, inputs.Length, instance.OutputName, LineNumber);
+                        instance.Log.Error("Index of Input ({0}) given to Run() is outside the bounds of available inputs ({1}). ('{2}' on line {3})", index, inputs.Length, instance.OutputName, LineNumber);
                         return "<Error>";
                     }
 
                     var stream = inputs[index] as Stream;
                     if (stream == null)
                     {
-                        instance.Log(LogLevel.Error, "Input to Run() node must be of type stream ('{0}' on line {1}).", instance.OutputName, LineNumber);
+                        instance.Log.Error("Input to Run() node must be of type stream ('{0}' on line {1}).", instance.OutputName, LineNumber);
                         return "<Error>";
                     }
 

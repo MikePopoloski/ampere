@@ -7,14 +7,6 @@ using System.Threading.Tasks;
 
 namespace Ampere
 {
-    public enum LogLevel
-    {
-        Debug,
-        Info,
-        Warning,
-        Error
-    }
-
     public enum BuildStatus
     {
         Pending,
@@ -40,6 +32,12 @@ namespace Ampere
         }
 
         public BuildEnvironment Env
+        {
+            get;
+            private set;
+        }
+
+        public BuildLog Log
         {
             get;
             private set;
@@ -110,28 +108,7 @@ namespace Ampere
             this.context = context;
             TempBuilds = new List<BuildInstance>();
             Dependencies = new List<string>();
-        }
-
-        public void Log(LogLevel level, string message, params object[] args)
-        {
-            switch (level)
-            {
-                case LogLevel.Debug:
-                    context.Log.DebugFormat(message, args);
-                    break;
-
-                case LogLevel.Info:
-                    context.Log.InfoFormat(message, args);
-                    break;
-
-                case LogLevel.Warning:
-                    context.Log.WarnFormat(message, args);
-                    break;
-
-                case LogLevel.Error:
-                    context.Log.ErrorFormat(message, args);
-                    break;
-            }
+            Log = context.Log;
         }
 
         public Task<BuildInstance> Start(string name)
@@ -145,7 +122,7 @@ namespace Ampere
             var task = context.Start(name, true);
             if (task == null)
                 return null;
-            
+
             var result = task.Result;
             if (result == null || result.Status == BuildStatus.Failed)
                 Status = BuildStatus.Failed;

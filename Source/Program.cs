@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using CommandLine;
-using log4net;
 using Roslyn.Compilers;
 using Roslyn.Scripting;
 using Roslyn.Scripting.CSharp;

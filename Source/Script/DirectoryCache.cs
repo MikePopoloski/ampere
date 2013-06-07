@@ -26,7 +26,7 @@ namespace Ampere
             int count = set.Count();
 
             if (count > 1)
-                context.Log.ErrorFormat("More than one content file matches name '{0}' when using a flatten resolve (files: {1})", name, string.Join(", ", set));
+                context.Log.Error("More than one content file matches name '{0}' when using a flatten resolve (files: {1})", name, string.Join(", ", set));
             if (count != 1)
                 return null;
 

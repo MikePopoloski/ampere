@@ -82,13 +82,13 @@ namespace Ampere
         {
             if (!Directory.Exists(InputPath))
             {
-                Context.Log.ErrorFormat("Current input path '{0}' does not exist.", InputPath);
+                Context.Log.Error("Current input path '{0}' does not exist.", InputPath);
                 return null;
             }
 
             if (InputResolver == null)
             {
-                Context.Log.ErrorFormat("No input resolver function set.");
+                Context.Log.Error("No input resolver function set.");
                 return null;
             }
 
@@ -103,7 +103,7 @@ namespace Ampere
         {
             if (OutputResolver == null)
             {
-                Context.Log.ErrorFormat("No output resolver function set.");
+                Context.Log.Error("No output resolver function set.");
                 return null;
             }
 
@@ -118,7 +118,7 @@ namespace Ampere
 
             if (!Directory.Exists(directory))
             {
-                Context.Log.ErrorFormat("Current output path '{0}' does not exist.", directory);
+                Context.Log.Error("Current output path '{0}' does not exist.", directory);
                 return null;
             }
 
@@ -130,7 +130,7 @@ namespace Ampere
         {
             if (OutputResolver == null)
             {
-                Context.Log.ErrorFormat("No output resolver function set.");
+                Context.Log.Error("No output resolver function set.");
                 return null;
             }
 
