@@ -9,20 +9,18 @@ using System.Threading.Tasks;
 
 namespace Ampere
 {
-    class ExternalNode : TransientNode
+    class ExternalNode : RunNode
     {
-        const string KnownReplacements = @"\$\(Output(\[\d\])?\)|\$\(Input(\[\d\])\)|\$\(Name\)|\$\(TempName\)|\$\(TempDir\)|\$\d";
-
+        List<Func<ArgProvider, string>> argProviders = new List<Func<ArgProvider, string>>();
+        List<Func<ArgProvider, string>> resultProviders = new List<Func<ArgProvider, string>>();
         string fileName;
-        string arguments;
-        string[] outputs;
+        string argumentFormat;
         RunOptions options;
 
-        public ExternalNode(string fileName, string arguments, RunOptions options, string[] outputs)
+        public ExternalNode(string fileName, string arguments, RunOptions options)
         {
             this.fileName = Environment.ExpandEnvironmentVariables(fileName);
-            this.arguments = arguments;
-            this.outputs = outputs;
+            this.argumentFormat = arguments;
             this.options = options;
         }
 
@@ -34,9 +32,16 @@ namespace Ampere
                 return null;
             }
 
+            if (resultProviders.Count == 0)
+            {
+                instance.Log.Error("Running an external tool requires at least one Result specifier. (line {0})", LineNumber);
+                return null;
+            }
+
             // perform argument replacement
-            var inputArray = inputs.ToArray();
-            string currentArguments = Regex.Replace(arguments, KnownReplacements, m => Replacer(instance, inputArray, m));
+            var argProvider = new ArgProvider(instance, inputs, LineNumber);
+            string currentArguments = instance.Match.Result(argumentFormat);
+            currentArguments = string.Format(currentArguments, argProviders.Select(p => p(argProvider)).ToArray());
 
             var startInfo = new ProcessStartInfo(fileName, currentArguments);
             startInfo.CreateNoWindow = true;
@@ -76,77 +81,25 @@ namespace Ampere
             }
 
             var results = new List<Stream>();
-            foreach (var output in outputs)
+            foreach (var output in resultProviders.Select(p => p(argProvider)))
             {
-                string path = Regex.Replace(output, KnownReplacements, m => Replacer(instance, inputArray, m));
+                string path = instance.Match.Result(output);
                 results.Add(File.OpenRead(path));
             }
 
             return results;
         }
 
-        string Replacer(BuildInstance instance, object[] inputs, Match match)
+        public override RunNode Arg(Func<ArgProvider, string> resolver)
         {
-            if (match.Value.Length >= 3)
-            {
-                char type = match.Value[2];
-                if (type == 'N')
-                    return instance.OutputName;
-
-                if (match.Value.Contains("TempName"))
-                    return instance.Env.ResolveTemp(instance.OutputName);
-
-                if (match.Value.Contains("TempDir"))
-                    return instance.Env.TempPath;
-
-                if (type == 'I')
-                {
-                    int index = GetIndex(match);
-                    if (index < 0 || index >= inputs.Length)
-                    {
-                        instance.Log.Error("Index of Input ({0}) given to Run() is outside the bounds of available inputs ({1}). ('{2}' on line {3})", index, inputs.Length, instance.OutputName, LineNumber);
-                        return "<Error>";
-                    }
-
-                    var stream = inputs[index] as Stream;
-                    if (stream == null)
-                    {
-                        instance.Log.Error("Input to Run() node must be of type stream ('{0}' on line {1}).", instance.OutputName, LineNumber);
-                        return "<Error>";
-                    }
-
-                    var file = stream as FileStream;
-                    if (file != null)
-                        return file.Name;
-
-                    // otherwise, we need to write to a temporary file
-                    var path = Path.GetTempFileName();
-                    using (var tempFile = File.Create(path))
-                        stream.CopyTo(tempFile);
-
-                    return path;
-                }
-
-                if (type == 'O')
-                {
-                    if (match.Captures.Count > 2)
-                    {
-                        int index = GetIndex(match) - 1;
-                        if (index >= 0)
-                            return instance.Byproducts[index];
-                    }
-
-                    return instance.OutputPath;
-                }
-            }
-
-            // this is a regex replace string for output name matches
-            return instance.Match.Result(match.Value);
+            argProviders.Add(resolver);
+            return this;
         }
 
-        static int GetIndex(Match match)
+        public override RunNode Result(Func<ArgProvider, string> resolver)
         {
-            return Convert.ToInt32(match.Groups[2].Value[1].ToString());
+            resultProviders.Add(resolver);
+            return this;
         }
     }
 }

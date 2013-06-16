@@ -45,17 +45,17 @@ namespace Ampere
             return node;
         }
 
-        public TransientNode Run(string fileName, string arguments, RunOptions options, params string[] outputs)
+        public RunNode Run(string fileName, string arguments, RunOptions options)
         {
-            var node = new ExternalNode(fileName, arguments, options, outputs) { OutputNode = this };
+            var node = new ExternalNode(fileName, arguments, options) { OutputNode = this };
             InputNode = node;
 
             return node;
         }
 
-        public TransientNode Run(string fileName, string arguments, params string[] outputs)
+        public RunNode Run(string fileName, string arguments)
         {
-            var node = new ExternalNode(fileName, arguments, RunOptions.RedirectError, outputs) { OutputNode = this };
+            var node = new ExternalNode(fileName, arguments, RunOptions.RedirectError) { OutputNode = this };
             InputNode = node;
 
             return node;
