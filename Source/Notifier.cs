@@ -16,18 +16,11 @@ namespace Ampere
             var client = new TcpClient();
             var endPoint = Parse(connectionInfo);
 
-            client.BeginConnect(endPoint.Address, endPoint.Port, a => OnConnected(a, client), outputs);
-        }
-
-        static void OnConnected(IAsyncResult asyncResult, TcpClient client)
-        {
             try
             {
-                client.EndConnect(asyncResult);
+                client.Connect(endPoint);
 
-                var outputs = (List<string>)asyncResult.AsyncState;
                 var writer = new StreamWriter(client.GetStream(), Encoding.UTF8) { AutoFlush = true, NewLine = "\n" };
-
                 foreach (var output in outputs)
                     writer.WriteLine(output);
             }
