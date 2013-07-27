@@ -94,6 +94,9 @@ namespace Ampere
                 // if we have a filestream, we can do a straight file copy because we know it hasn't been changed
                 var outputPath = outputs[i];
                 var stream = inputArray[i] as Stream;
+                if (stream == null)
+                    return null;
+
                 var file = stream as FileStream;
                 if (file != null)
                     File.Copy(file.Name, outputPath, true);
